@@ -1,0 +1,14 @@
+Algoritmo
+
+Definir Entero numero2;
+
+numero2 = "Hola mundo";
+ 
+Si (resultado > 20)
+Entonces
+Escribir "Es mayor";
+Sino
+Escribir "Es menor"
+FinSi
+
+FinAlgoritmo

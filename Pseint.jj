@@ -1,0 +1,444 @@
+
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(Pseint)
+    public class Pseint {
+        public static void main(String[] args) {
+            try{
+                Pseint pseint = new Pseint(System.in);
+                pseint.programa();
+                System.out.println("\nCompilacion completada con exito");
+              }catch(Exception e){
+                System.out.println(e.getMessage());
+              }
+          }
+        }
+PARSER_END(Pseint)
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gramatica
+    |--------------------------------------------------------------------------
+    |
+    | Todos los tokens del analizador
+    |
+    */
+
+
+// Inicio y fin del programa
+TOKEN : {
+    <INICIO: "Algoritmo">{
+        System.out.println(image + " -> Arranque_Programa");
+    }
+    |
+    <FIN: "FinAlgoritmo">{
+        System.out.println(image + " -> Fin_Programa");
+    }
+}
+
+// Tipos de datos declarados
+TOKEN : {
+
+    <ENTERO: ("Entero" | "entero")>{
+                System.out.println(image + " -> Tipo_De_Dato");
+    }           //44
+    |
+    <FLOTANTE : ("Flotante" | "flotante")>{
+        System.out.println(image + " -> Tipo_De_Dato");
+    }    //45
+    |
+    <CADENA: ("Cadena" | "cadena")>{
+        System.out.println(image + " -> Tipo_De_Dato");
+    }           //46
+    |
+    <CARACTER: ("Caracter" | "caracter")>{
+        System.out.println(image + " -> Tipo_De_Dato");
+    }     //47
+    |
+    <BOOLEANO: ("Booleano" | "booleano")>{
+        System.out.println(image + " -> Tipo_De_Dato");
+    }     //48
+}
+
+// Constantes/Literales
+TOKEN : {
+    <#LETRA: ["a" - "z", "ñ"] | ["A" - "Z", "Ñ"]>
+    |
+    <#NUMERO: ["0" - "9"]>
+    |
+    <CADENA_TEXTO: "\"" ( ~["\""] )* "\"">{
+        System.out.println(image + " -> Cadena_Texto");
+    }
+    |
+    <CARACTER_TEXTO: "'"( ~["'"] | "" )"'">{
+        System.out.println(image + " -> Caracter_Texto");
+    }
+    |
+    <NUMERO_ENTERO: ("-" | "" | "+")(<NUMERO>)+>{
+        System.out.println(image + " -> Numero_Entero");
+    }
+    |
+    <NUMERO_DECIMAL: ("-" | "" | "+")(<NUMERO>)+"."(<NUMERO>)+>{
+        System.out.println(image + " -> Numero_Decimal");
+    }
+    |
+    <BOOLEANO_FALSO: "Falso">{
+        System.out.println(image + " -> Booleano_Falso");
+    }
+    |
+    <BOOLEANO_VERDADERO: "Verdadero">{
+        System.out.println(image + " -> Booleano_Verdadero");
+    }
+    |
+    <COMENTARIO: "#"( ~["\n", "\r"] )*>{
+        System.out.println(image + " -> Comentario");
+    }
+    |
+    <DELIMITADOR: ";">{
+        System.out.println(image + " -> Delimitador");
+    }
+
+}
+
+// Escritura, Lectura y Definición de variables
+TOKEN : {
+    <LEER: "Leer">{
+        System.out.println(image + " -> Lectura");
+    }
+    |
+    <ESCRIBIR: "Escribir">{
+        System.out.println(image + " -> Escritura");
+    }
+    |
+    <DEFINIR: "Definir">{
+        System.out.println(image + " -> Definicion_Varible");
+    }
+    |
+    <COMO: "Como">{
+        System.out.println(image + " -> Definir_Como");
+    }
+}
+
+// Operadores
+TOKEN : {
+    <ASIGNACION: "=">{
+        System.out.println(image + " -> Operador_Asignacion");
+    }
+    |
+    <SUMA: "+">{
+        System.out.println(image + " -> Operador_Suma");
+    }
+    |
+    <RESTA: "-">{
+        System.out.println(image + " -> Operador_Resta");
+    }
+    |
+    <MULTIPLICACION: "*">{
+        System.out.println(image + " -> Operador_Mult");
+    }
+    |
+    <DIVISION: "/">{
+        System.out.println(image + " -> Operador_Div");
+    }
+    |
+    <MODULO: "%">{
+        System.out.println(image + " -> Operador_Mod");
+    }
+    |
+    <LOGICO_AND: "&&">{
+        System.out.println(image + " -> Operador_Logico_AND");
+    }
+    |
+    <LOGICO_OR: "||">{
+        System.out.println(image + " -> Operador_Logico_OR");
+    }
+    |
+    <LOGICO_NOT: "!">{
+        System.out.println(image + " -> Operador_Logico_NOT");
+    }
+    |
+    <ASIGNACION_COMPUESTA: (<SUMA>|<RESTA>|<MULTIPLICACION>|<DIVISION>|<MODULO>|<LOGICO_AND>|<LOGICO_OR>)<ASIGNACION>>{
+        System.out.println(image + " -> Operador_Asignacion_Compuesta");
+    }
+    |
+    <OPERADOR_IGUAL: "==">{
+        System.out.println(image + " -> Operador_igualQue");
+    }
+    |
+    <OPERADOR_DIFERENTE: "!=">{
+        System.out.println(image + " -> Operador_diferente");
+    }
+    |
+    <OPERADOR_MAYOR: ">">{
+        System.out.println(image + " -> Operador_mayorQue");
+    }
+    |
+    <OPERADOR_MENOR: "<">{
+        System.out.println(image + " -> Operador_menorQue");
+    }
+    |
+    <OPERADOR_MAYOR_IGUAL: ">=">{
+        System.out.println(image + " -> Operador_mayorIgualQue");
+    }
+    |
+    <OPERADOR_MENOR_IGUAL: "<=">{
+         System.out.println(image + " -> Operador_menorIgualQue");
+    }
+    |
+    <OPERADOR_DOS_PUNTOS: ":">{
+        System.out.println(image + " -> Operador_Dos_Puntos");
+    }
+    |
+    <PAREN_ABIERTO: "(">{
+        System.out.println(image + " -> Parentesis_Abierto");
+    }
+    |
+    <PAREN_CERRADO: ")">{
+        System.out.println(image + " -> Parentesis_Cerrado");
+    }
+}
+
+// Ciclos
+TOKEN : {
+    <INICIO_CICLO_PARA: "Para">{
+        System.out.println(image + " -> Ciclo_Para");
+    }
+    |
+    <CONDICION_CICLO_PARA: "Hasta que">{
+        System.out.println(image + " -> Condicion_Ciclo_Para");
+    }
+    |
+    <INCREMENTO_CICLO_PARA: "Con incremento">{
+        System.out.println(image + " -> Incremento_Ciclo_Para");
+    }
+    |
+    <FIN_CICLO_PARA: "FinPara">{
+        System.out.println(image + " -> Fin_Ciclo_Para");
+    }
+    |
+    <INICIO_CICLO_MIENTRAS: "Mientras">{
+        System.out.println(image + " -> Ciclo_Mientras");
+    }
+    |
+    <FIN_CICLO_MIENTRAS: "FinMientras">{
+        System.out.println(image + " -> Fin_Ciclo_Mientras");
+    }
+    |
+    <INICIO_CICLO_REPETIR: "Repetir">{
+        System.out.println(image + " -> Ciclo_Repetir");
+    }
+    |
+    <CONDICION_CICLO_REPETIR: "Finaliza cuando">{
+        System.out.println(image + " -> Condicion_Ciclo_Repetir");
+    }
+}
+
+// Condicionales
+TOKEN : {
+    <INICIO_CONDICIONAL_SI:"Si"> {
+        System.out.println(image + " -> Condicional_Si");
+    }
+    |
+    <ENTONCES:"Entonces">{
+        System.out.println(image + " -> Entonces");
+    }
+    |
+    <CONDICIONAL_SINO:"Sino">{
+        System.out.println(image + " -> Condicional_Sino");
+    }
+    |
+    <FIN_CONDICIONAL_SI:"FinSi">{
+        System.out.println(image + " -> Fin_Condicional_Si");
+    }
+    |
+    <INICIO_CONDICIONAL_SEGUN:"Segun">{
+        System.out.println(image + " -> Condicional_Segun");
+    }
+    |
+    <CASO:"Caso">{
+        System.out.println(image + " -> Segun_Caso");
+    }
+    |
+    <CASO_PREDETERMINADO:"En otro caso">{
+        System.out.println(image + " -> Segun_Caso_Predeterminado");
+    }
+    |
+    <FIN_SEGUN:"FinSegun">{
+        System.out.println(image + " -> Fin_Condicional_Segun");
+    }
+    |
+    <HACER : "Hacer">{
+        System.out.println(image + " -> Hacer");
+    }
+}
+
+//Variables
+TOKEN : {
+    <VARIABLE:(<LETRA> | "_")(<NUMERO> | <LETRA> | "_")*>{
+        System.out.println(image + " -> Variable");
+    }
+
+}
+
+SKIP : {
+    " "
+    | "\t"
+    | "\r\n"
+    | "\n"
+}
+
+// Tokens invalidos
+TOKEN : {
+    <NUMERO_INVALIDO: ("-" | "" | "+")(<NUMERO>)*("."( <NUMERO> | <LETRA> )* | <LETRA>)+>
+    |
+    <INVALIDO: ~[]>
+}
+
+// Gramaticas
+
+void programa(): { }{
+    <ENTERO>{System.out.print("kind -> " + token.kind);}
+        //<INICIO> ( sentencias() )+ <FIN><EOF>
+}
+
+void sentencias():{}{
+
+    <COMENTARIO> |
+    sentenciaAsignacion() |
+    sentenciaDeclaracionVariables() |
+    leerDato() |
+    imprimirDato() |
+    sentenciaSi() |
+    sentenciaSegun() |
+    sentenciaPara() |
+    sentenciaRepetir() |
+    sentenciaMientras() |
+    expresion()
+
+}
+
+void sentenciaAsignacion():{}{
+
+    <VARIABLE> asignacion() <DELIMITADOR>
+}
+
+void sentenciaDeclaracionVariables():{}{
+
+    declaracionVariables() <DELIMITADOR>
+}
+
+void tiposDato():{ }{
+    <ENTERO> | <FLOTANTE> | <CADENA> | <CARACTER> | <BOOLEANO>
+}
+
+void constantes():{ }{
+    <NUMERO_ENTERO> | <NUMERO_DECIMAL> | <CADENA_TEXTO> | <CARACTER_TEXTO> | <BOOLEANO_FALSO> | <BOOLEANO_VERDADERO>
+}
+
+void asignacion():{}{
+    ( <ASIGNACION> | <ASIGNACION_COMPUESTA> ) condicion()
+        // Comprobación de tipos
+        {
+            Token tokenVariable = ((Token)this.jjtree.peekNode(0)).token_source.getSpecialToken(0);
+            Token tokenValor = ((Token)this.jjtree.peekNode(2)).token_source.getSpecialToken(0);
+            String tipoVariable = tokenVariable.image;
+            String tipoValor = tokenValor.image;
+
+            if (!tipoCompatible(tipoVariable, tipoValor)) {
+                throw new ParseException("Error de tipos: no se puede asignar un valor de tipo " + tipoValor + " a una variable de tipo " + tipoVariable);
+            }
+        }
+}
+
+void operacion():{ }{
+    ( <LOGICO_NOT> )* ( <VARIABLE> | constantes() | operacionParentesis() )
+    (operadores() ( <LOGICO_NOT> )* (<VARIABLE> | constantes() | operacionParentesis() ))*
+}
+
+void operacionParentesis():{}{
+    <PAREN_ABIERTO> operacion() <PAREN_CERRADO>
+}
+
+void operadores():{}{
+    operadoresAritmeticos() | operadoresLogicos() | operadoresRelacionales()
+}
+
+void operadoresAritmeticos():{}{
+    <SUMA> | <RESTA> | <MULTIPLICACION> | <DIVISION> | <MODULO>
+}
+
+void operadoresRelacionales():{}{
+    <OPERADOR_IGUAL> | <OPERADOR_DIFERENTE> | <OPERADOR_MAYOR> | <OPERADOR_MAYOR_IGUAL> | <OPERADOR_MENOR> | <OPERADOR_MENOR_IGUAL>
+}
+
+void operadoresLogicos():{}{
+    <LOGICO_AND> | <LOGICO_OR>
+}
+
+void declaracionVariables():{}{
+    <DEFINIR> tiposDato() <VARIABLE> ( asignacion() )?
+}
+
+void leerDato():{}{
+
+    <LEER> <VARIABLE> <DELIMITADOR>
+}
+
+void imprimirDato():{}{
+
+    <ESCRIBIR> ( constantes() | <VARIABLE> ) <DELIMITADOR>
+}
+
+void sentenciaSi():{}{
+
+    <INICIO_CONDICIONAL_SI> condicion() <ENTONCES> ( sentencias() )+
+    ( <CONDICIONAL_SINO> ( sentencias() )+ )?
+    <FIN_CONDICIONAL_SI>
+}
+
+// var1 + 5 < var2 - 2 || 3 + 6 != val3 % 5  <- Lograr esto (Hecho)
+void condicion():{} {
+    operacion()
+    ( operadoresRelacionales() operacion() )*
+}
+
+void sentenciaSegun():{}{
+
+    <INICIO_CONDICIONAL_SEGUN> <VARIABLE> <HACER>
+    ( <CASO> constantes() <OPERADOR_DOS_PUNTOS> ( sentencias() )+ )+
+    ( <CASO_PREDETERMINADO> <OPERADOR_DOS_PUNTOS> ( sentencias() )+ )?
+    <FIN_SEGUN>
+}
+
+void sentenciaPara():{}{
+
+    <INICIO_CICLO_PARA> (<VARIABLE> <ASIGNACION> ( constantes() | <VARIABLE> ) | declaracionVariables() )
+    <CONDICION_CICLO_PARA> condicion() <INCREMENTO_CICLO_PARA> ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
+    ( sentencias() )+
+    <FIN_CICLO_PARA>
+}
+
+void sentenciaRepetir():{}{
+
+    <INICIO_CICLO_REPETIR> ( sentencias() )+
+    <CONDICION_CICLO_REPETIR> condicion() <DELIMITADOR>
+}
+
+void sentenciaMientras():{}{
+
+    <INICIO_CICLO_MIENTRAS> condicion() <HACER>
+    ( sentencias() )+
+    <FIN_CICLO_MIENTRAS>
+}
+
+void expresion():{} {
+    operacion()
+}
+
+
+
+
+
+
