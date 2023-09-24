@@ -1,0 +1,6 @@
+Algoritmo
+#Duplicidad de valores
+    definir entero x;
+    definir entero y;
+
+FinAlgoritmo

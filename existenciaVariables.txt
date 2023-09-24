@@ -1,0 +1,13 @@
+Algoritmo
+
+#Algoritmo que realiza la suma de dos numeros
+
+    Definir entero n1 = 20;
+    Definir entero res;
+    Definir entero n2 = 10;
+    Escribir "Ingrese un numero";
+    Leer n1;
+    #MARCA ERROR
+    res = n1 + n2;
+    Escribir "El resultado fue",res;
+FinAlgoritmo

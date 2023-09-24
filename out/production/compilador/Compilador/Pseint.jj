@@ -1,0 +1,377 @@
+
+options {
+    STATIC = false;
+    //**AGREGUE UNA OPCION QUE ME PERMITE NO TOMARLE IMPORTANCIA MAYUSCULAS Y MINUSCULAS
+    IGNORE_CASE = true;
+}
+
+PARSER_BEGIN(Pseint)
+package Compilador;
+import java.util.ArrayList;
+import Compilador.TablaIdentificadores;
+    public class Pseint {
+
+        static ArrayList<String> tabla = PseintTokenManager.tabla;
+        public static void main(String[] args) {
+            try{
+                Pseint pseint = new Pseint(System.in);
+                pseint.programa();
+
+                if(tabla.size() != 0){
+                    System.out.println("ERRORES PROGRAMA");
+                    System.out.println("=================");
+                    for(String i:tabla){
+                        System.out.println(i);
+                    }
+                }else{
+                    System.out.println("\nCompilacion completada con exito");
+
+                }
+              }catch(Exception e){
+                System.out.println(e.getMessage());
+              }
+          }
+        }
+PARSER_END(Pseint)
+
+TOKEN_MGR_DECLS:{
+    static ArrayList<String> tabla = new ArrayList();
+}
+
+// Inicio y fin del programa
+TOKEN : {
+    <INICIO: "Algoritmo">
+    |
+    <FIN: "FinAlgoritmo">
+}
+
+// Tipos de dato
+TOKEN : {
+
+    <ENTERO: ("Entero" | "entero")>{System.out.println("kind de Entero -> " + matchedToken.kind);}
+    |
+    <FLOTANTE : ("Flotante" | "flotante")>{System.out.println("kind de flotante -> " + matchedToken.kind);}
+    |
+    <CADENA: ("Cadena" | "cadena")>
+    |
+    <CARACTER: ("Caracter" | "caracter")>
+    |
+    <BOOLEANO: ("Booleano" | "booleano")>
+}
+
+//DEFINIR ENTERO x = 10;
+// "x" -> 50 ()
+//
+// Constantes/Literales
+TOKEN : {
+    <#LETRA: ["a" - "z"] | ["A" - "Z"]>
+    |
+    <#NUMERO: ["0" - "9"]>
+    |
+    <CADENA_TEXTO: "\"" ( ~["\""] )* "\"">
+    |
+    <CARACTER_TEXTO: "'"( ~["'"] | "" )"'">
+    |
+    <NUMERO_ENTERO: ("-" | "" | "+")(<NUMERO>)+>
+    |
+    <NUMERO_DECIMAL: ("-" | "" | "+")(<NUMERO>)+"."(<NUMERO>)+>
+    |
+    <BOOLEANO_FALSO: "Falso">
+    |
+    <BOOLEANO_VERDADERO: "Verdadero">
+    |
+    <DELIMITADOR: ";">
+
+}
+
+// Escritura, Lectura y Definición de variables
+TOKEN : {
+    <LEER: "Leer">
+    |
+    <ESCRIBIR: "Escribir">
+    |
+    <DEFINIR: "Definir">
+    //**ELIMINE EL TOKEN COMO
+}
+
+// Operadores
+TOKEN : {
+    <ASIGNACION: "=">
+    |
+    <SUMA: "+">
+    |
+    <RESTA: "-">
+    |
+    <MULTIPLICACION: "*">
+    |
+    <DIVISION: "/">
+    |
+    <MODULO: "%">
+    |
+    <LOGICO_AND: "&&">
+    |
+    <LOGICO_OR: "||">
+    |
+    <LOGICO_NOT: "!">
+    |
+    //QUITAR EL SIGUIENTE TOKEN
+    // x +=3
+    <ASIGNACION_COMPUESTA: (<SUMA>|<RESTA>|<MULTIPLICACION>|<DIVISION>|<MODULO>|<LOGICO_AND>|<LOGICO_OR>)<ASIGNACION>>
+    |
+    <OPERADOR_IGUAL: "==">
+    |
+    <OPERADOR_DIFERENTE: "!=">
+    |
+    <OPERADOR_MAYOR: ">">
+    |
+    <OPERADOR_MENOR: "<">
+    |
+    <OPERADOR_MAYOR_IGUAL: ">=">
+    |
+    <OPERADOR_MENOR_IGUAL: "<=">
+    |
+    <OPERADOR_DOS_PUNTOS: ":">
+    |
+    <PAREN_ABIERTO: "(">
+    |
+    <PAREN_CERRADO: ")">
+}
+
+// Ciclos
+TOKEN : {
+    <INICIO_CICLO_PARA: "Para">
+    |
+    <CONDICION_CICLO_PARA: "Hasta que">
+    |
+    <INCREMENTO_CICLO_PARA: "Con incremento">
+    |
+    <FIN_CICLO_PARA: "FinPara">
+    |
+    <INICIO_CICLO_MIENTRAS: "Mientras">
+    |
+    <FIN_CICLO_MIENTRAS: "FinMientras">
+    |
+    <INICIO_CICLO_REPETIR: "Repetir">
+    |
+    <CONDICION_CICLO_REPETIR: "Finaliza cuando">
+}
+
+// Condicionales
+TOKEN : {
+    <INICIO_CONDICIONAL_SI:"Si">
+    |
+    <ENTONCES:"Entonces">
+    |
+    <CONDICIONAL_SINO:"Sino">
+    |
+    <FIN_CONDICIONAL_SI:"FinSi">
+    |
+    <INICIO_CONDICIONAL_SEGUN:"Segun">
+    |
+    <CASO:"Caso">
+    |
+    <CASO_PREDETERMINADO:"En otro caso">
+    |
+    <FIN_SEGUN:"FinSegun">
+    |
+    <HACER : "Hacer">
+}
+
+//Variables
+TOKEN : {
+    <VARIABLE:(<LETRA> | "_")(<NUMERO> | <LETRA> | "_")*>
+    /*
+    * IDENTIFICADORES NO VALIDOS
+    * */
+}
+
+SKIP : {
+    " "
+    | "\t"
+    | "\r\n"
+    | "\n"
+    | <COMENTARIO: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+    //Tokens invalidos
+    |<ID_INVALIDO:(<NUMERO>)+(<LETRA>|<NUMERO>)+>{tabla.add("Error lexico en linea:" + input_stream.getBeginLine() + " columna:" + input_stream.getBeginColumn() +
+                                                                     " Identificador invalido:" + image);}
+    | <INVALIDO: ~[]>{tabla.add("Error lexico en linea" + input_stream.getBeginLine() + " columna:" + input_stream.getBeginColumn() +
+                    "Token invalido:" + image);}
+}
+
+// Gramaticas
+
+//CAMBIO: Nuestro programa puede no tener sentencias entre Algoritmo y FinAlgoritmo
+void programa(): { }{
+
+       try{
+          <INICIO>
+          ( sentencias() )*
+          <FIN>{TablaIdentificadores.mostrarTabla();}
+       }catch(ParseException e){
+            Token t;
+            do{
+                t=getNextToken();
+            }while(t.kind != EOF);
+            tabla.add("Error del parser:" + e.getMessage());
+       }
+
+}
+
+void sentencias():{
+    //TokenErrorAsignaciones.insertarTablas();
+ }{
+
+    try{
+        (
+            sentenciaAsignacion() |
+            sentenciaDeclaracionVariables() |
+            leerDato() |
+            imprimirDato() |
+            sentenciaSi() |
+            sentenciaSegun() |
+            sentenciaPara() |
+            sentenciaRepetir() |
+            sentenciaMientras()
+        )
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != EOF);
+        tabla.add("Error del parser:" + e.getMessage());
+    }
+
+
+}
+//ASIGNACION DE VALOR
+void sentenciaAsignacion():{}{
+    try{
+
+
+    (<VARIABLE> asignacion() <DELIMITADOR>)
+    }catch(ParseException e){
+        //System.out.println(e.toString());
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR);
+        tabla.add("Error del parser:" + e.getMessage());
+    }
+}
+
+//Probar manejo de errores
+void sentenciaDeclaracionVariables():{}{
+    try{
+        (declaracionVariables() <DELIMITADOR>)
+
+    }catch(ParseException e){
+            //System.out.println(e.toString());
+            Token t;
+            do{
+                t=getNextToken();
+                //VERIFICAR ERROR DE PUNTO Y COMA AL FINAL
+            }while(t.kind != DELIMITADOR);
+            tabla.add("Error:" + e.getMessage());
+    }
+}
+
+void tiposDato():{ }{
+    <ENTERO> | <FLOTANTE> | <CADENA> | <CARACTER> | <BOOLEANO>
+}
+
+void constantes():{ }{
+    <NUMERO_ENTERO> | <NUMERO_DECIMAL> | <CADENA_TEXTO> | <CARACTER_TEXTO> | <BOOLEANO_FALSO> | <BOOLEANO_VERDADERO>
+}
+
+void asignacion():{}{
+    ( <ASIGNACION> | <ASIGNACION_COMPUESTA> ) condicion()
+}
+
+//REALIZA OPERACIONES ENTRE PARENTESIS
+void operacion():{ }{
+    ( <LOGICO_NOT> )* ( <VARIABLE> | constantes() | operacionParentesis() )
+    (operadores() ( <LOGICO_NOT> )* (<VARIABLE> | constantes() | operacionParentesis() ))*
+}
+
+void operacionParentesis():{}{
+    <PAREN_ABIERTO> operacion() <PAREN_CERRADO>
+}
+
+void operadores():{}{
+    operadoresAritmeticos() | operadoresLogicos() | operadoresRelacionales()
+}
+
+void operadoresAritmeticos():{}{
+    <SUMA> | <RESTA> | <MULTIPLICACION> | <DIVISION> | <MODULO>
+}
+
+void operadoresRelacionales():{}{
+    <OPERADOR_IGUAL> | <OPERADOR_DIFERENTE> | <OPERADOR_MAYOR> | <OPERADOR_MAYOR_IGUAL> | <OPERADOR_MENOR> | <OPERADOR_MENOR_IGUAL>
+}
+
+void operadoresLogicos():{}{
+    <LOGICO_AND> | <LOGICO_OR>
+}
+
+//DECLARACION DE VARIABLES:COMPROBACION DE TIPOS
+void declaracionVariables():{
+
+ }{
+    <DEFINIR>
+    tiposDato()
+    <VARIABLE> {TablaIdentificadores.insertarIdentificadores(token);}
+    ( asignacion() )?
+}
+
+void leerDato():{}{
+
+    <LEER> <VARIABLE> <DELIMITADOR>
+}
+
+void imprimirDato():{}{
+
+    <ESCRIBIR> ( constantes() | <VARIABLE> ) <DELIMITADOR>
+}
+
+void sentenciaSi():{}{
+
+    <INICIO_CONDICIONAL_SI> condicion() <ENTONCES> ( sentencias() )+
+    ( <CONDICIONAL_SINO> ( sentencias() )+ )?
+    <FIN_CONDICIONAL_SI>
+}
+
+// var1 + 5 < var2 - 2 || 3 + 6 != val3 % 5  <- Lograr esto (Hecho)
+void condicion():{} {
+    operacion()
+    ( operadoresRelacionales() operacion() )*
+}
+
+void sentenciaSegun():{}{
+
+    <INICIO_CONDICIONAL_SEGUN> <VARIABLE> <HACER>
+    ( <CASO> constantes() <OPERADOR_DOS_PUNTOS> ( sentencias() )+ )+
+    ( <CASO_PREDETERMINADO> <OPERADOR_DOS_PUNTOS> ( sentencias() )+ )?
+    <FIN_SEGUN>
+}
+
+void sentenciaPara():{}{
+
+    <INICIO_CICLO_PARA> (<VARIABLE> <ASIGNACION> ( constantes() | <VARIABLE> ) | declaracionVariables() )
+    <CONDICION_CICLO_PARA> condicion() <INCREMENTO_CICLO_PARA> ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
+    ( sentencias() )+
+    <FIN_CICLO_PARA>
+}
+
+void sentenciaRepetir():{}{
+
+    <INICIO_CICLO_REPETIR> ( sentencias() )+
+    <CONDICION_CICLO_REPETIR> condicion() <DELIMITADOR>
+}
+
+void sentenciaMientras():{}{
+
+    <INICIO_CICLO_MIENTRAS> condicion() <HACER>
+    ( sentencias() )+
+    <FIN_CICLO_MIENTRAS>
+}
+
