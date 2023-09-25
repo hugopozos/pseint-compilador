@@ -108,6 +108,7 @@ public class Pseint implements PseintConstants {
   }
 
 //ASIGNACION DE VALOR
+//Aqui hay un problema
   final public void sentenciaAsignacion() throws ParseException {
     Token identificador = new Token();
     Token asignado = new Token();
@@ -236,7 +237,7 @@ public class Pseint implements PseintConstants {
   }
 
   final public Token operacion() throws ParseException {
-    Token t;
+    Token t = new Token();
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -258,8 +259,7 @@ public class Pseint implements PseintConstants {
                                         tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
                                         token.beginLine + " en la columna:" + token.beginColumn);
                                     }else{
-
-                                        {if (true) return token;}
+                                        t=token;
                                     }
       break;
     case CADENA_TEXTO:
@@ -269,7 +269,6 @@ public class Pseint implements PseintConstants {
     case BOOLEANO_FALSO:
     case BOOLEANO_VERDADERO:
       t = constantes();
-                      {if (true) return t;}
       break;
     case PAREN_ABIERTO:
       operacionParentesis();
@@ -331,7 +330,6 @@ public class Pseint implements PseintConstants {
       case BOOLEANO_FALSO:
       case BOOLEANO_VERDADERO:
         t = constantes();
-                      {if (true) return t;}
         break;
       case PAREN_ABIERTO:
         operacionParentesis();
@@ -342,6 +340,7 @@ public class Pseint implements PseintConstants {
         throw new ParseException();
       }
     }
+     {if (true) return t;}
     throw new Error("Missing return statement in function");
   }
 

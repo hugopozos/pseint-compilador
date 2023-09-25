@@ -322,7 +322,7 @@ Token condicion():{Token asignado = new Token();} {
 
 
 Token operacion():{
-    Token t;
+    Token t = new Token();
  }{
     ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
@@ -330,11 +330,11 @@ Token operacion():{
                                         tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
                                         token.beginLine + " en la columna:" + token.beginColumn);
                                     }else{
-                                        return t=token;
+                                        t=token;
                                     }
 
 }
-    | t=constantes() {return t;}
+    | t=constantes()
     | operacionParentesis() )
 
     (operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
@@ -344,7 +344,8 @@ Token operacion():{
                                                             token.beginLine + " en la columna:" + token.beginColumn);
                                                         }
 }
-    | t=constantes() {return t;} | operacionParentesis() ))*
+    | t=constantes()| operacionParentesis() ))*
+    {return t;}
 }
 
 void operacionParentesis():{}{
