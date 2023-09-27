@@ -95,41 +95,43 @@ public interface PseintConstants {
   /** RegularExpression Id. */
   int INCREMENTO_CICLO_PARA = 42;
   /** RegularExpression Id. */
-  int FIN_CICLO_PARA = 43;
+  int DECREMENTO_CICLO_PARA = 43;
   /** RegularExpression Id. */
-  int INICIO_CICLO_MIENTRAS = 44;
+  int FIN_CICLO_PARA = 44;
   /** RegularExpression Id. */
-  int FIN_CICLO_MIENTRAS = 45;
+  int INICIO_CICLO_MIENTRAS = 45;
   /** RegularExpression Id. */
-  int INICIO_CICLO_REPETIR = 46;
+  int FIN_CICLO_MIENTRAS = 46;
   /** RegularExpression Id. */
-  int CONDICION_CICLO_REPETIR = 47;
+  int INICIO_CICLO_REPETIR = 47;
   /** RegularExpression Id. */
-  int INICIO_CONDICIONAL_SI = 48;
+  int CONDICION_CICLO_REPETIR = 48;
   /** RegularExpression Id. */
-  int ENTONCES = 49;
+  int INICIO_CONDICIONAL_SI = 49;
   /** RegularExpression Id. */
-  int CONDICIONAL_SINO = 50;
+  int ENTONCES = 50;
   /** RegularExpression Id. */
-  int FIN_CONDICIONAL_SI = 51;
+  int CONDICIONAL_SINO = 51;
   /** RegularExpression Id. */
-  int INICIO_CONDICIONAL_SEGUN = 52;
+  int FIN_CONDICIONAL_SI = 52;
   /** RegularExpression Id. */
-  int CASO = 53;
+  int INICIO_CONDICIONAL_SEGUN = 53;
   /** RegularExpression Id. */
-  int CASO_PREDETERMINADO = 54;
+  int CASO = 54;
   /** RegularExpression Id. */
-  int FIN_SEGUN = 55;
+  int CASO_PREDETERMINADO = 55;
   /** RegularExpression Id. */
-  int HACER = 56;
+  int FIN_SEGUN = 56;
   /** RegularExpression Id. */
-  int VARIABLE = 57;
+  int HACER = 57;
   /** RegularExpression Id. */
-  int COMENTARIO = 62;
+  int VARIABLE = 58;
   /** RegularExpression Id. */
-  int ID_INVALIDO = 63;
+  int COMENTARIO = 63;
   /** RegularExpression Id. */
-  int INVALIDO = 64;
+  int ID_INVALIDO = 64;
+  /** RegularExpression Id. */
+  int INVALIDO = 65;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -139,11 +141,11 @@ public interface PseintConstants {
     "<EOF>",
     "\"Algoritmo\"",
     "\"FinAlgoritmo\"",
-    "<ENTERO>",
-    "<FLOTANTE>",
-    "<CADENA>",
-    "<CARACTER>",
-    "<BOOLEANO>",
+    "\"entero\"",
+    "\"flotante\"",
+    "\"cadena\"",
+    "\"caracter\"",
+    "\"booleano\"",
     "<LETRA>",
     "<NUMERO>",
     "<CADENA_TEXTO>",
@@ -178,7 +180,8 @@ public interface PseintConstants {
     "\")\"",
     "\"Para\"",
     "\"Hasta que\"",
-    "\"Con incremento\"",
+    "\"incremento\"",
+    "\"decremento\"",
     "\"FinPara\"",
     "\"Mientras\"",
     "\"FinMientras\"",

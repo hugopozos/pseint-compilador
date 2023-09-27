@@ -5,9 +5,7 @@ Algoritmo
     Definir entero n1 = 20;
     Definir entero res;
     Definir entero n2 = 10;
-    Escribir "Ingrese un numero";
-    Leer n1;
 
-    res = n1 + n2;
+    res = n2;
     Escribir "El resultado fue",res;
 FinAlgoritmo

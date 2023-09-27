@@ -81,14 +81,20 @@ public class TablaIdentificadores {
     public static boolean verifiacionConToken(Token identificador, Token asignado){
         //Obtenemos el tipo de identificador en la tabla
 
-        System.out.println("kind de asignado:"+ asignado.kind);
+        //System.out.println("kind de asignado:"+ asignado.kind);
+        System.out.println("Identificador:" + identificador);
+        if(identificador.equals(null)){
+            return false;
+        }
         String tipo = tabla.get(identificador.image).toLowerCase();
-        System.out.println("tipo de indentificador:" + tipo);
+
+
+        //System.out.println("tipo de indentificador:" + tipo);
         int kind = asignado.kind;
 
-        //Si el kind que asignado es 57 quiere decir que es identificador
+        //Si el kind que asignado es 58 quiere decir que es identificador
         //Por lo que debemos de obtener el kind de su tipo de dato (entero,flotante,booleano,etc)
-        if(kind == 57){
+        if(kind == 58){
             kind = obtenerTipoKind(asignado);
         }
 

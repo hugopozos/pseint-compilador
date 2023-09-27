@@ -58,52 +58,44 @@ public class Pseint implements PseintConstants {
             do{
                 t=getNextToken();
             }while(t.kind != EOF);
-            tabla.add("Error del parser:" + e.getMessage());
+            tabla.add("Parser Error:" + e.getMessage());
     }
   }
 
   final public void sentencias() throws ParseException {
     TablaIdentificadores.inicializarTipos();
-    try {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case VARIABLE:
-        sentenciaAsignacion();
-        break;
-      case DEFINIR:
-        sentenciaDeclaracionVariables();
-        break;
-      case LEER:
-        leerDato();
-        break;
-      case ESCRIBIR:
-        imprimirDato();
-        break;
-      case INICIO_CONDICIONAL_SI:
-        sentenciaSi();
-        break;
-      case INICIO_CONDICIONAL_SEGUN:
-        sentenciaSegun();
-        break;
-      case INICIO_CICLO_PARA:
-        sentenciaPara();
-        break;
-      case INICIO_CICLO_REPETIR:
-        sentenciaRepetir();
-        break;
-      case INICIO_CICLO_MIENTRAS:
-        sentenciaMientras();
-        break;
-      default:
-        jj_la1[1] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-    } catch (ParseException e) {
-        Token t;
-        do{
-            t=getNextToken();
-        }while(t.kind != EOF);
-        tabla.add("Error del parser:" + e.getMessage());
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case VARIABLE:
+      sentenciaAsignacion();
+      break;
+    case DEFINIR:
+      sentenciaDeclaracionVariables();
+      break;
+    case LEER:
+      leerDato();
+      break;
+    case ESCRIBIR:
+      imprimirDato();
+      break;
+    case INICIO_CONDICIONAL_SI:
+      sentenciaSi();
+      break;
+    case INICIO_CONDICIONAL_SEGUN:
+      sentenciaSegun();
+      break;
+    case INICIO_CICLO_PARA:
+      sentenciaPara();
+      break;
+    case INICIO_CICLO_REPETIR:
+      sentenciaRepetir();
+      break;
+    case INICIO_CICLO_MIENTRAS:
+      sentenciaMientras();
+      break;
+    default:
+      jj_la1[1] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
     }
   }
 
@@ -117,17 +109,18 @@ public class Pseint implements PseintConstants {
                     //EXISTENCIA DE IDENTIFICADORES
                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                      if(!TablaIdentificadores.checkExistenciaId(token)){
-                           tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
-                           token.beginLine + " en la columna:" + token.beginColumn);
+                           tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                   token.beginLine + " column:" + token.beginColumn);
                      }else{
                         identificador = token;
                      }
       asignado = asignacion();
                             //Se evalua si se esta asignando el tipo correcto al identificador
-                       System.out.println("identificador: " + identificador.image);
-                       System.out.println("asignado: " + asignado.image);
+                       //System.out.println("identificador: " + identificador.image);
+                       //System.out.println("asignado: " + asignado.image);
                       if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                       tabla.add("El token: " + asignado.image + " no corresponde al tipo:" + TablaIdentificadores.obtenerTipo(identificador));
+                                tabla.add("The token: " + asignado.image + " doesn't correspond to the:" +
+                                            TablaIdentificadores.obtenerTipo(identificador) + " type");
                           }
       jj_consume_token(DELIMITADOR);
     } catch (ParseException e) {
@@ -136,7 +129,7 @@ public class Pseint implements PseintConstants {
         do{
             t=getNextToken();
         }while(t.kind != DELIMITADOR);
-        tabla.add("Falta de un elemento:" + e.getMessage());
+        tabla.add("Parser error:" + e.getMessage());
     }
   }
 
@@ -152,7 +145,7 @@ public class Pseint implements PseintConstants {
                 t=getNextToken();
                 //VERIFICAR ERROR DE PUNTO Y COMA AL FINAL
             }while(t.kind != DELIMITADOR);
-            tabla.add("Error:" + e.getMessage());
+            tabla.add("Parser error:" + e.getMessage());
     }
   }
 
@@ -256,8 +249,8 @@ public class Pseint implements PseintConstants {
                                      //EXISTENCIA DE IDENTIFICADORES
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                     if(!TablaIdentificadores.checkExistenciaId(token)){
-                                        tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
-                                        token.beginLine + " en la columna:" + token.beginColumn);
+                                        tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                                    token.beginLine + " column:" + token.beginColumn);
                                     }else{
                                         t=token;
                                     }
@@ -319,8 +312,8 @@ public class Pseint implements PseintConstants {
                                                      //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
-                                                            tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
-                                                            token.beginLine + " en la columna:" + token.beginColumn);
+                                                            tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                                            token.beginLine + " column:" + token.beginColumn);
                                                         }
         break;
       case CADENA_TEXTO:
@@ -454,7 +447,7 @@ public class Pseint implements PseintConstants {
     jj_consume_token(VARIABLE);
                         if(TablaIdentificadores.checkExistenciaId(token)){
                             System.out.println("Ya existe el token: " + token.image);
-                            tabla.add("El identificador: " + token.image + " ya existe, error en la linea");
+                            tabla.add("The identifier: " + token.image + " already exist, at line: " + token.beginLine + " column:" + token.endColumn);
                         }else{
                             TablaIdentificadores.insertarIdentificadores(token,tipoDato);
                             identificador = token;
@@ -471,10 +464,10 @@ public class Pseint implements PseintConstants {
                                //Se evavlua si se esta asignando el tipo correcto al identificador
                     if(asignado.kind != 0){
                               System.out.println("identificador: " + identificador.image);
-                                  System.out.println("asignado: " + asignado.image);
+                              System.out.println("asignado: " + asignado.image);
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                      tabla.add("El token: " + asignado.image + " no corresponde al tipo:" +
-                                        TablaIdentificadores.obtenerTipo(identificador));
+                                      tabla.add("The token: " + asignado.image + " doesn't correspond to the:" +
+                                        TablaIdentificadores.obtenerTipo(identificador) + " type");
                                   }
                           }
   }
@@ -527,39 +520,26 @@ public class Pseint implements PseintConstants {
       jj_consume_token(VARIABLE);
       jj_consume_token(DELIMITADOR);
     } else {
-      jj_consume_token(-1);
-      throw new ParseException();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case ESCRIBIR:
+        jj_consume_token(ESCRIBIR);
+        jj_consume_token(VARIABLE);
+        jj_consume_token(DELIMITADOR);
+        break;
+      default:
+        jj_la1[16] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
     }
   }
 
   final public void sentenciaSi() throws ParseException {
-    jj_consume_token(INICIO_CONDICIONAL_SI);
-    condicion();
-    jj_consume_token(ENTONCES);
-    label_6:
-    while (true) {
-      sentencias();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LEER:
-      case ESCRIBIR:
-      case DEFINIR:
-      case INICIO_CICLO_PARA:
-      case INICIO_CICLO_MIENTRAS:
-      case INICIO_CICLO_REPETIR:
-      case INICIO_CONDICIONAL_SI:
-      case INICIO_CONDICIONAL_SEGUN:
-      case VARIABLE:
-        ;
-        break;
-      default:
-        jj_la1[16] = jj_gen;
-        break label_6;
-      }
-    }
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case CONDICIONAL_SINO:
-      jj_consume_token(CONDICIONAL_SINO);
-      label_7:
+    try {
+      jj_consume_token(INICIO_CONDICIONAL_SI);
+      condicion();
+      jj_consume_token(ENTONCES);
+      label_6:
       while (true) {
         sentencias();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -576,15 +556,45 @@ public class Pseint implements PseintConstants {
           break;
         default:
           jj_la1[17] = jj_gen;
-          break label_7;
+          break label_6;
         }
       }
-      break;
-    default:
-      jj_la1[18] = jj_gen;
-      ;
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case CONDICIONAL_SINO:
+        jj_consume_token(CONDICIONAL_SINO);
+        label_7:
+        while (true) {
+          sentencias();
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case LEER:
+          case ESCRIBIR:
+          case DEFINIR:
+          case INICIO_CICLO_PARA:
+          case INICIO_CICLO_MIENTRAS:
+          case INICIO_CICLO_REPETIR:
+          case INICIO_CONDICIONAL_SI:
+          case INICIO_CONDICIONAL_SEGUN:
+          case VARIABLE:
+            ;
+            break;
+          default:
+            jj_la1[18] = jj_gen;
+            break label_7;
+          }
+        }
+        break;
+      default:
+        jj_la1[19] = jj_gen;
+        ;
+      }
+      jj_consume_token(FIN_CONDICIONAL_SI);
+    } catch (ParseException e) {
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != FIN_CONDICIONAL_SI);
+        tabla.add("Parser error:" + e.getMessage());
     }
-    jj_consume_token(FIN_CONDICIONAL_SI);
   }
 
   final public void sentenciaSegun() throws ParseException {
@@ -612,7 +622,7 @@ public class Pseint implements PseintConstants {
           ;
           break;
         default:
-          jj_la1[19] = jj_gen;
+          jj_la1[20] = jj_gen;
           break label_9;
         }
       }
@@ -621,7 +631,7 @@ public class Pseint implements PseintConstants {
         ;
         break;
       default:
-        jj_la1[20] = jj_gen;
+        jj_la1[21] = jj_gen;
         break label_8;
       }
     }
@@ -645,22 +655,22 @@ public class Pseint implements PseintConstants {
           ;
           break;
         default:
-          jj_la1[21] = jj_gen;
+          jj_la1[22] = jj_gen;
           break label_10;
         }
       }
       break;
     default:
-      jj_la1[22] = jj_gen;
+      jj_la1[23] = jj_gen;
       ;
     }
     jj_consume_token(FIN_SEGUN);
   }
 
+//Ciclo for
   final public void sentenciaPara() throws ParseException {
-    jj_consume_token(INICIO_CICLO_PARA);
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case VARIABLE:
+    try {
+      jj_consume_token(INICIO_CICLO_PARA);
       jj_consume_token(VARIABLE);
       jj_consume_token(ASIGNACION);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -676,57 +686,67 @@ public class Pseint implements PseintConstants {
         jj_consume_token(VARIABLE);
         break;
       default:
-        jj_la1[23] = jj_gen;
+        jj_la1[24] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      break;
-    case DEFINIR:
-      declaracionVariables();
-      break;
-    default:
-      jj_la1[24] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-    jj_consume_token(CONDICION_CICLO_PARA);
-    condicion();
-    jj_consume_token(INCREMENTO_CICLO_PARA);
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case NUMERO_ENTERO:
-      jj_consume_token(NUMERO_ENTERO);
-      break;
-    case NUMERO_DECIMAL:
-      jj_consume_token(NUMERO_DECIMAL);
-      break;
-    default:
-      jj_la1[25] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-    label_11:
-    while (true) {
-      sentencias();
+      jj_consume_token(CONDICION_CICLO_PARA);
+      condicion();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LEER:
-      case ESCRIBIR:
-      case DEFINIR:
-      case INICIO_CICLO_PARA:
-      case INICIO_CICLO_MIENTRAS:
-      case INICIO_CICLO_REPETIR:
-      case INICIO_CONDICIONAL_SI:
-      case INICIO_CONDICIONAL_SEGUN:
-      case VARIABLE:
-        ;
+      case INCREMENTO_CICLO_PARA:
+        jj_consume_token(INCREMENTO_CICLO_PARA);
+        break;
+      case DECREMENTO_CICLO_PARA:
+        jj_consume_token(DECREMENTO_CICLO_PARA);
+        break;
+      default:
+        jj_la1[25] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case NUMERO_ENTERO:
+        jj_consume_token(NUMERO_ENTERO);
+        break;
+      case NUMERO_DECIMAL:
+        jj_consume_token(NUMERO_DECIMAL);
         break;
       default:
         jj_la1[26] = jj_gen;
-        break label_11;
+        jj_consume_token(-1);
+        throw new ParseException();
       }
+      label_11:
+      while (true) {
+        sentencias();
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case LEER:
+        case ESCRIBIR:
+        case DEFINIR:
+        case INICIO_CICLO_PARA:
+        case INICIO_CICLO_MIENTRAS:
+        case INICIO_CICLO_REPETIR:
+        case INICIO_CONDICIONAL_SI:
+        case INICIO_CONDICIONAL_SEGUN:
+        case VARIABLE:
+          ;
+          break;
+        default:
+          jj_la1[27] = jj_gen;
+          break label_11;
+        }
+      }
+      jj_consume_token(FIN_CICLO_PARA);
+    } catch (ParseException e) {
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != FIN); //FIN_CICLO_PARA.kind = 44
+        tabla.add("Parser error:" + e.getMessage());
     }
-    jj_consume_token(FIN_CICLO_PARA);
   }
 
+//Ciclo while
   final public void sentenciaRepetir() throws ParseException {
     jj_consume_token(INICIO_CICLO_REPETIR);
     label_12:
@@ -745,7 +765,7 @@ public class Pseint implements PseintConstants {
         ;
         break;
       default:
-        jj_la1[27] = jj_gen;
+        jj_la1[28] = jj_gen;
         break label_12;
       }
     }
@@ -754,6 +774,7 @@ public class Pseint implements PseintConstants {
     jj_consume_token(DELIMITADOR);
   }
 
+//Ciclo do while
   final public void sentenciaMientras() throws ParseException {
     jj_consume_token(INICIO_CICLO_MIENTRAS);
     condicion();
@@ -774,7 +795,7 @@ public class Pseint implements PseintConstants {
         ;
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[29] = jj_gen;
         break label_13;
       }
     }
@@ -823,7 +844,7 @@ public class Pseint implements PseintConstants {
   private boolean jj_lookingAhead = false;
   private boolean jj_semLA;
   private int jj_gen;
-  final private int[] jj_la1 = new int[29];
+  final private int[] jj_la1 = new int[30];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -833,13 +854,13 @@ public class Pseint implements PseintConstants {
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x1c0000,0x1c0000,0xfc00,0x40200000,0x80000000,0x20000000,0xfc00,0x9fc00000,0x20000000,0xfc00,0x9fc00000,0x7c00000,0x80000000,0x18000000,0x40200000,0xf8,0x1c0000,0x1c0000,0x0,0x1c0000,0x0,0x1c0000,0x0,0xfc00,0x100000,0x3000,0x1c0000,0x1c0000,0x1c0000,};
+      jj_la1_0 = new int[] {0x1c0000,0x1c0000,0xfc00,0x40200000,0x80000000,0x20000000,0xfc00,0x9fc00000,0x20000000,0xfc00,0x9fc00000,0x7c00000,0x80000000,0x18000000,0x40200000,0xf8,0x80000,0x1c0000,0x1c0000,0x0,0x1c0000,0x0,0x1c0000,0x0,0xfc00,0x0,0x3000,0x1c0000,0x1c0000,0x1c0000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x2115100,0x2115100,0x0,0x0,0x1f,0x0,0x2000040,0x1f,0x0,0x2000040,0x1f,0x0,0x1f,0x0,0x0,0x0,0x2115100,0x2115100,0x40000,0x2115100,0x200000,0x2115100,0x400000,0x2000000,0x2000000,0x0,0x2115100,0x2115100,0x2115100,};
+      jj_la1_1 = new int[] {0x422a100,0x422a100,0x0,0x0,0x1f,0x0,0x4000040,0x1f,0x0,0x4000040,0x1f,0x0,0x1f,0x0,0x0,0x0,0x0,0x422a100,0x422a100,0x80000,0x422a100,0x400000,0x422a100,0x800000,0x4000000,0xc00,0x0,0x422a100,0x422a100,0x422a100,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[2];
   private boolean jj_rescan = false;
@@ -856,7 +877,7 @@ public class Pseint implements PseintConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -871,7 +892,7 @@ public class Pseint implements PseintConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -882,7 +903,7 @@ public class Pseint implements PseintConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -893,7 +914,7 @@ public class Pseint implements PseintConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -903,7 +924,7 @@ public class Pseint implements PseintConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -913,7 +934,7 @@ public class Pseint implements PseintConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1028,12 +1049,12 @@ public class Pseint implements PseintConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[65];
+    boolean[] la1tokens = new boolean[66];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 29; i++) {
+    for (int i = 0; i < 30; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1048,7 +1069,7 @@ public class Pseint implements PseintConstants {
         }
       }
     }
-    for (int i = 0; i < 65; i++) {
+    for (int i = 0; i < 66; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

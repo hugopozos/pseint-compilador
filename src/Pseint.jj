@@ -48,20 +48,18 @@ TOKEN : {
 // Tipos de dato
 TOKEN : {
 
-    <ENTERO: ("Entero" | "entero")>
+    <ENTERO: "entero">
     |
-    <FLOTANTE : ("Flotante" | "flotante")>
+    <FLOTANTE:"flotante">
     |
-    <CADENA: ("Cadena" | "cadena")>
+    <CADENA:"cadena">
     |
-    <CARACTER: ("Caracter" | "caracter")>
+    <CARACTER:"caracter">
     |
-    <BOOLEANO: ("Booleano" | "booleano")>
+    <BOOLEANO:"booleano">
 }
 
-//DEFINIR ENTERO x = 10;
-// "x" -> 50 ()
-//
+
 // Constantes/Literales
 TOKEN : {
     <#LETRA: ["a" - "z"] | ["A" - "Z"]>
@@ -71,8 +69,8 @@ TOKEN : {
     <CADENA_TEXTO: "\"" ( ~["\""] )* "\"">
     |
     <CARACTER_TEXTO: "'"( ~["'"] | "" )"'">
-    //<NUMERO_ENTERO: ("-" | "" | "+")(<NUMERO>)+>
-    |<NUMERO_ENTERO:(<NUMERO>)+>
+    |
+    <NUMERO_ENTERO:(<NUMERO>)+>
     |
     <NUMERO_DECIMAL: ("-" | "" | "+")(<NUMERO>)+"."(<NUMERO>)+>
     |
@@ -82,7 +80,7 @@ TOKEN : {
     |
     <DELIMITADOR: ";">
     |
-    <COMA:",">
+    <COMA:","> //Coma
 
 }
 
@@ -93,7 +91,6 @@ TOKEN : {
     <ESCRIBIR: "Escribir">
     |
     <DEFINIR: "Definir">
-    //**ELIMINE EL TOKEN COMO
 }
 
 // Operadores
@@ -116,8 +113,6 @@ TOKEN : {
     |
     <LOGICO_NOT: "!">
     |
-    //QUITAR EL SIGUIENTE TOKEN
-    // x +=3
     <ASIGNACION_COMPUESTA: (<SUMA>|<RESTA>|<MULTIPLICACION>|<DIVISION>|<MODULO>|<LOGICO_AND>|<LOGICO_OR>)<ASIGNACION>>
     |
     <OPERADOR_IGUAL: "==">
@@ -145,7 +140,9 @@ TOKEN : {
     |
     <CONDICION_CICLO_PARA: "Hasta que">
     |
-    <INCREMENTO_CICLO_PARA: "Con incremento">
+    <INCREMENTO_CICLO_PARA: "incremento">
+    |
+    <DECREMENTO_CICLO_PARA:"decremento">
     |
     <FIN_CICLO_PARA: "FinPara">
     |
@@ -194,10 +191,10 @@ SKIP : {
     | "\n"
     | <COMENTARIO: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
     //Tokens invalidos
-    |<ID_INVALIDO:(<NUMERO>)+(<LETRA>|<NUMERO>)+>{tabla.add("Error lexico en linea:" + input_stream.getBeginLine() + " columna:" + input_stream.getBeginColumn() +
-                                                                     " Identificador invalido:" + image);}
-    | <INVALIDO: ~[]>{tabla.add("Error lexico en linea" + input_stream.getBeginLine() + " columna:" + input_stream.getBeginColumn() +
-                    "Token invalido:" + image);}
+    |<ID_INVALIDO:(<NUMERO>)+(<LETRA>|<NUMERO>)+>{tabla.add("Lexical error at line:" + input_stream.getBeginLine() + " column:" + input_stream.getBeginColumn() +
+                                                                     " invalid id:" + image);}
+    | <INVALIDO: ~[]>{tabla.add("Lexical error at line:" + input_stream.getBeginLine() + " column:" + input_stream.getBeginColumn() +
+                    "invalid token:" + image);}
 }
 
 // Gramaticas
@@ -208,13 +205,14 @@ void programa(): { }{
        try{
           <INICIO>
           ( sentencias() )*
-          <FIN>{TablaIdentificadores.mostrarTabla();}
+          <FIN>{TablaIdentificadores.mostrarTabla();
+       }
        }catch(ParseException e){
             Token t;
             do{
                 t=getNextToken();
             }while(t.kind != EOF);
-            tabla.add("Error del parser:" + e.getMessage());
+            tabla.add("Parser Error:" + e.getMessage());
        }
 
 }
@@ -222,9 +220,6 @@ void programa(): { }{
 void sentencias():{
     TablaIdentificadores.inicializarTipos();
  }{
-
-    try{
-        (
             sentenciaAsignacion() |
             sentenciaDeclaracionVariables() |
             leerDato() |
@@ -234,15 +229,6 @@ void sentencias():{
             sentenciaPara() |
             sentenciaRepetir() |
             sentenciaMientras()
-        )
-    }catch(ParseException e){
-        Token t;
-        do{
-            t=getNextToken();
-        }while(t.kind != EOF);
-        tabla.add("Error del parser:" + e.getMessage());
-    }
-
 
 }
 //ASIGNACION DE VALOR
@@ -258,17 +244,18 @@ void sentenciaAsignacion():{
                     //EXISTENCIA DE IDENTIFICADORES
                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                      if(!TablaIdentificadores.checkExistenciaId(token)){
-                           tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
-                           token.beginLine + " en la columna:" + token.beginColumn);
+                           tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                   token.beginLine + " column:" + token.beginColumn);
                      }else{
                         identificador = token;
                      }
     }
     asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
-                       System.out.println("identificador: " + identificador.image);
-                       System.out.println("asignado: " + asignado.image);
+                       //System.out.println("identificador: " + identificador.image);
+                       //System.out.println("asignado: " + asignado.image);
                       if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                       tabla.add("El token: " + asignado.image + " no corresponde al tipo:" + TablaIdentificadores.obtenerTipo(identificador));
+                                tabla.add("The token: " + asignado.image + " doesn't correspond to the:" +
+                                            TablaIdentificadores.obtenerTipo(identificador) + " type");
                           }
     }
     <DELIMITADOR>
@@ -279,7 +266,7 @@ void sentenciaAsignacion():{
         do{
             t=getNextToken();
         }while(t.kind != DELIMITADOR);
-        tabla.add("Falta de un elemento:" + e.getMessage());
+        tabla.add("Parser error:" + e.getMessage());
     }
 }
 
@@ -295,7 +282,7 @@ void sentenciaDeclaracionVariables():{}{
                 t=getNextToken();
                 //VERIFICAR ERROR DE PUNTO Y COMA AL FINAL
             }while(t.kind != DELIMITADOR);
-            tabla.add("Error:" + e.getMessage());
+            tabla.add("Parser error:" + e.getMessage());
     }
 }
 
@@ -327,8 +314,8 @@ Token operacion():{
     ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                     if(!TablaIdentificadores.checkExistenciaId(token)){
-                                        tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
-                                        token.beginLine + " en la columna:" + token.beginColumn);
+                                        tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                                    token.beginLine + " column:" + token.beginColumn);
                                     }else{
                                         t=token;
                                     }
@@ -340,8 +327,8 @@ Token operacion():{
     (operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
-                                                            tabla.add("El identificador: " + token.image + " no existe, error en la linea:" +
-                                                            token.beginLine + " en la columna:" + token.beginColumn);
+                                                            tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                                            token.beginLine + " column:" + token.beginColumn);
                                                         }
 }
     | t=constantes()| operacionParentesis() ))*
@@ -379,7 +366,7 @@ void declaracionVariables():{
     <VARIABLE> {
                         if(TablaIdentificadores.checkExistenciaId(token)){
                             System.out.println("Ya existe el token: " + token.image);
-                            tabla.add("El identificador: " + token.image + " ya existe, error en la linea");
+                            tabla.add("The identifier: " + token.image + " already exist, at line: " + token.beginLine + " column:" + token.endColumn);
                         }else{
                             TablaIdentificadores.insertarIdentificadores(token,tipoDato);
                             identificador = token;
@@ -389,10 +376,10 @@ void declaracionVariables():{
     (asignado=asignacion())? { //Se evavlua si se esta asignando el tipo correcto al identificador
                     if(asignado.kind != 0){
                               System.out.println("identificador: " + identificador.image);
-                                  System.out.println("asignado: " + asignado.image);
+                              System.out.println("asignado: " + asignado.image);
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                      tabla.add("El token: " + asignado.image + " no corresponde al tipo:" +
-                                        TablaIdentificadores.obtenerTipo(identificador));
+                                      tabla.add("The token: " + asignado.image + " doesn't correspond to the:" +
+                                        TablaIdentificadores.obtenerTipo(identificador) + " type");
                                   }
                           }
 }
@@ -415,14 +402,23 @@ void imprimirDato():{}{
     //Modificar estructura
     LOOKAHEAD(3)<ESCRIBIR> <CADENA_TEXTO> <DELIMITADOR>
     |LOOKAHEAD(3)<ESCRIBIR><CADENA_TEXTO><COMA><VARIABLE><DELIMITADOR>
+    |<ESCRIBIR><VARIABLE><DELIMITADOR>
     //<ESCRIBIR> ( constantes() | <VARIABLE> ) <DELIMITADOR>
 }
 
 void sentenciaSi():{}{
+    try{
+        <INICIO_CONDICIONAL_SI> condicion() <ENTONCES> ( sentencias() )+
+            ( <CONDICIONAL_SINO> ( sentencias() )+ )?
+            <FIN_CONDICIONAL_SI>
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != FIN_CONDICIONAL_SI);
+        tabla.add("Parser error:" + e.getMessage());
+    }
 
-    <INICIO_CONDICIONAL_SI> condicion() <ENTONCES> ( sentencias() )+
-    ( <CONDICIONAL_SINO> ( sentencias() )+ )?
-    <FIN_CONDICIONAL_SI>
 }
 
 
@@ -435,20 +431,29 @@ void sentenciaSegun():{}{
     <FIN_SEGUN>
 }
 
+//Ciclo for
 void sentenciaPara():{}{
+    try{
+        <INICIO_CICLO_PARA><VARIABLE><ASIGNACION>( constantes() | <VARIABLE> )
+            <CONDICION_CICLO_PARA> condicion() (<INCREMENTO_CICLO_PARA>|<DECREMENTO_CICLO_PARA>) ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
+            ( sentencias() )+
+            <FIN_CICLO_PARA>
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != FIN); //FIN_CICLO_PARA.kind = 44
+        tabla.add("Parser error:" + e.getMessage());
+    }
 
-    <INICIO_CICLO_PARA> (<VARIABLE> <ASIGNACION> ( constantes() | <VARIABLE> ) | declaracionVariables() )
-    <CONDICION_CICLO_PARA> condicion() <INCREMENTO_CICLO_PARA> ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
-    ( sentencias() )+
-    <FIN_CICLO_PARA>
 }
-
+//Ciclo while
 void sentenciaRepetir():{}{
 
     <INICIO_CICLO_REPETIR> ( sentencias() )+
     <CONDICION_CICLO_REPETIR> condicion() <DELIMITADOR>
 }
-
+//Ciclo do while
 void sentenciaMientras():{}{
 
     <INICIO_CICLO_MIENTRAS> condicion() <HACER>
