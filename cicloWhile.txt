@@ -2,6 +2,7 @@ Algoritmo
     #Definir entero x=0;
     Repetir
         Escribir "Hola mundo";
-        x+=1;
+        #NO EXISTE EL ELEMENTO X EL CUAL SE LE ASIGNARA UN VALOR
+        x=1;
     Finaliza cuando x==10;
 FinAlgoritmo

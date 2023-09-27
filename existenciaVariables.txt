@@ -4,8 +4,7 @@ Algoritmo
 
     Definir entero n1 = 20;
     Definir entero res;
-    Definir entero n2 = 10;
-
+    #EN ESTE CASO, NO EXISTE EL ELEMENTO ASIGNADO
     res = n2;
     Escribir "El resultado fue",res;
 FinAlgoritmo

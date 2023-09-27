@@ -82,35 +82,34 @@ public class TablaIdentificadores {
         //Obtenemos el tipo de identificador en la tabla
 
         //System.out.println("kind de asignado:"+ asignado.kind);
-        System.out.println("Identificador:" + identificador);
-        if(identificador.equals(null)){
-            return false;
-        }
-        String tipo = tabla.get(identificador.image).toLowerCase();
+        //System.out.println("Identificador:" + identificador);
 
 
-        //System.out.println("tipo de indentificador:" + tipo);
-        int kind = asignado.kind;
+            String tipo = tabla.get(identificador.image).toLowerCase();
 
-        //Si el kind que asignado es 58 quiere decir que es identificador
-        //Por lo que debemos de obtener el kind de su tipo de dato (entero,flotante,booleano,etc)
-        if(kind == 58){
-            kind = obtenerTipoKind(asignado);
-        }
 
-        //Si mi tipo del identificador es entero, comprobamos que el token asignado sea igual de tipo entero o relacionado
-        if(tipo.equals("entero") && enterosTipos.contains(kind)){
-            return true;
-            //Si mi tipo del identificador es cadena, comprobamos que el token asignado sea igual de tipo cdena
-        }else if(tipo.equals("cadena") && cadenaTipos.contains(kind)){
-            return true;
-        }else if(tipo.equals("booleano") && booleanosTipos.contains(kind)){
-            return true;
-        }else if(tipo.equals("flotante") && flotantesTipos.contains(kind)) {
-            return true;
-        }
-        else{
-            return false;
-        }
+            //System.out.println("tipo de indentificador:" + tipo);
+            int kind = asignado.kind;
+
+            //Si el kind que asignado es 58 quiere decir que es identificador
+            //Por lo que debemos de obtener el kind de su tipo de dato (entero,flotante,booleano,etc)
+            if(kind == 58){
+                kind = obtenerTipoKind(asignado);
+            }
+
+            //Si mi tipo del identificador es entero, comprobamos que el token asignado sea igual de tipo entero o relacionado
+            if(tipo.equals("entero") && enterosTipos.contains(kind)){
+                return true;
+                //Si mi tipo del identificador es cadena, comprobamos que el token asignado sea igual de tipo cdena
+            }else if(tipo.equals("cadena") && cadenaTipos.contains(kind)){
+                return true;
+            }else if(tipo.equals("booleano") && booleanosTipos.contains(kind)){
+                return true;
+            }else if(tipo.equals("flotante") && flotantesTipos.contains(kind)) {
+                return true;
+            }
+            else {
+                return false;
+            }
     }
 }

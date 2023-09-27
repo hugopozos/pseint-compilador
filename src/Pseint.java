@@ -52,7 +52,7 @@ public class Pseint implements PseintConstants {
         sentencias();
       }
       jj_consume_token(FIN);
-                TablaIdentificadores.mostrarTabla();
+
     } catch (ParseException e) {
             Token t;
             do{
@@ -106,22 +106,27 @@ public class Pseint implements PseintConstants {
     Token asignado = new Token();
     try {
       jj_consume_token(VARIABLE);
-                    //EXISTENCIA DE IDENTIFICADORES
-                    // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                     if(!TablaIdentificadores.checkExistenciaId(token)){
-                           tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
-                                   token.beginLine + " column:" + token.beginColumn);
-                     }else{
-                        identificador = token;
-                     }
+                        //EXISTENCIA DE IDENTIFICADORES
+                        // Sino existe el id, lo guardamos en nuestra arreglo de errores
+                        //System.out.println("Token:" + token);
+                         if(!TablaIdentificadores.checkExistenciaId(token)){
+                               tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                       token.beginLine + " column:" + token.beginColumn);
+                         }else{
+                            identificador = token;
+
+                         }
       asignado = asignacion();
-                            //Se evalua si se esta asignando el tipo correcto al identificador
-                       //System.out.println("identificador: " + identificador.image);
-                       //System.out.println("asignado: " + asignado.image);
-                      if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                tabla.add("The token: " + asignado.image + " doesn't correspond to the:" +
+                                //Se evalua si se esta asignando el tipo correcto al identificador
+                        if(asignado.kind !=0 && identificador.kind !=0){ //Con esta sentencia comprobamos que el elemento asignado no sea null
+                            //Si existe el identificador comprobamos su tipo
+                                if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
+
+                                    tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
                                             TablaIdentificadores.obtenerTipo(identificador) + " type");
-                          }
+                                }
+
+                        }
       jj_consume_token(DELIMITADOR);
     } catch (ParseException e) {
         //System.out.println(e.toString());
@@ -446,7 +451,7 @@ public class Pseint implements PseintConstants {
     tipoDato = tiposDato();
     jj_consume_token(VARIABLE);
                         if(TablaIdentificadores.checkExistenciaId(token)){
-                            System.out.println("Ya existe el token: " + token.image);
+
                             tabla.add("The identifier: " + token.image + " already exist, at line: " + token.beginLine + " column:" + token.endColumn);
                         }else{
                             TablaIdentificadores.insertarIdentificadores(token,tipoDato);
@@ -463,10 +468,10 @@ public class Pseint implements PseintConstants {
     }
                                //Se evavlua si se esta asignando el tipo correcto al identificador
                     if(asignado.kind != 0){
-                              System.out.println("identificador: " + identificador.image);
-                              System.out.println("asignado: " + asignado.image);
+                              //System.out.println("identificador: " + identificador.image);
+                              //System.out.println("asignado: " + asignado.image);
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                      tabla.add("The token: " + asignado.image + " doesn't correspond to the:" +
+                                      tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
                                         TablaIdentificadores.obtenerTipo(identificador) + " type");
                                   }
                           }

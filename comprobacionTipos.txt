@@ -1,5 +1,5 @@
 Algoritmo
-    definir entero n1=10;
+    definir entero n1=1;
     definir entero res;
-    res=n1;
+    res=n1 + "hola";
 FinAlgoritmo
