@@ -5,17 +5,17 @@ options {
     IGNORE_CASE = true;
 }
 
-PARSER_BEGIN(Pseint)
+PARSER_BEGIN(Pseasy)
 package src;
 import java.util.ArrayList;
 import src.TablaIdentificadores;
-public class Pseint {
+public class Pseasy {
 
-        static ArrayList<String> tabla = PseintTokenManager.tabla;
+        static ArrayList<String> tabla = PseasyTokenManager.tabla;
         public static void main(String[] args) {
             try{
-                Pseint pseint = new Pseint(System.in);
-                pseint.programa();
+                Pseasy pseasy = new Pseasy(System.in);
+                pseasy.programa();
 
                 if(tabla.size() != 0){
                     System.out.println("ERRORES PROGRAMA");
@@ -32,7 +32,7 @@ public class Pseint {
               }
           }
         }
-PARSER_END(Pseint)
+PARSER_END(Pseasy)
 
 TOKEN_MGR_DECLS:{
     static ArrayList<String> tabla = new ArrayList();
