@@ -2,9 +2,10 @@ Algoritmo
     Definir entero x;
     Escribir "Ingresa tu edad";
     Leer x;
+
     Si x < 18 entonces
-            Escribir "Eres menor de edad";
+       Escribir "Eres menor de edad";
     Sino
-                    Si x >= 18 entonces
-                        Escribir "Eres mayor de edad";
+        Escribir "Mayor de 18";
+
 FinAlgoritmo

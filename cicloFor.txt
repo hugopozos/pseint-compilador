@@ -1,6 +1,6 @@
 Algoritmo
     Definir entero x;
-    Para x = 0 Hasta que x == 10 decremento 1
+    Para x=0 Hasta que x == 10 decremento 1
         Escribir x;
     FinPara
 FinAlgoritmo

@@ -11,13 +11,13 @@ public class Pseasy implements PseasyConstants {
                 pseasy.programa();
 
                 if(tabla.size() != 0){
-                    System.out.println("ERRORES PROGRAMA");
+                    System.out.println("PROGRAM ERRORS");
                     System.out.println("=================");
                     for(String i:tabla){
                         System.out.println(i);
                     }
                 }else{
-                    System.out.println("\nCompilacion completada con exito");
+                    System.out.println("\ncompilation generated with success");
 
                 }
               }catch(Exception e){
@@ -252,6 +252,7 @@ public class Pseasy implements PseasyConstants {
     case VARIABLE:
       jj_consume_token(VARIABLE);
                                      //EXISTENCIA DE IDENTIFICADORES
+
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                     if(!TablaIdentificadores.checkExistenciaId(token)){
                                         tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
@@ -466,10 +467,9 @@ public class Pseasy implements PseasyConstants {
       jj_la1[14] = jj_gen;
       ;
     }
-                               //Se evavlua si se esta asignando el tipo correcto al identificador
-                    if(asignado.kind != 0){
-                              //System.out.println("identificador: " + identificador.image);
-                              //System.out.println("asignado: " + asignado.image);
+                               //Se evalua si se esta asignando el tipo correcto al identificador
+                    if(asignado.kind != 0){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
+
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
                                       tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
                                         TablaIdentificadores.obtenerTipo(identificador) + " type");
@@ -597,7 +597,7 @@ public class Pseasy implements PseasyConstants {
         Token t;
         do{
             t=getNextToken();
-        }while(t.kind != FIN_CONDICIONAL_SI);
+        }while(t.kind != FIN);
         tabla.add("Parser error:" + e.getMessage());
     }
   }
@@ -751,7 +751,7 @@ public class Pseasy implements PseasyConstants {
     }
   }
 
-//Ciclo while
+//Ciclo do while
   final public void sentenciaRepetir() throws ParseException {
     jj_consume_token(INICIO_CICLO_REPETIR);
     label_12:
@@ -779,7 +779,7 @@ public class Pseasy implements PseasyConstants {
     jj_consume_token(DELIMITADOR);
   }
 
-//Ciclo do while
+//Ciclo while
   final public void sentenciaMientras() throws ParseException {
     jj_consume_token(INICIO_CICLO_MIENTRAS);
     condicion();

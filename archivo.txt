@@ -1,0 +1,6 @@
+Algoritmo
+    definir entero n1;
+    n1=1;
+    Leer n1;
+    Escribir "resultado", n1;
+FinAlgoritmo

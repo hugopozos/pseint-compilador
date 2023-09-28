@@ -1,10 +1,4 @@
 Algoritmo
-
-#Algoritmo que realiza la suma de dos numeros
-
-    Definir entero n1 = 20;
     Definir entero res;
-    #EN ESTE CASO, NO EXISTE EL ELEMENTO ASIGNADO
-    res = n2;
-    Escribir "El resultado fue",res;
+    res = n2; #No existe n2
 FinAlgoritmo

@@ -1,0 +1,7 @@
+Algoritmo
+    Definir entero x =0;
+    Mientras x<10
+        Escribir "Hola mundo";
+        x+=1;
+    FinMientras
+FinAlgoritmo

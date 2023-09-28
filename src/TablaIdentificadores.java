@@ -44,15 +44,13 @@ public class TablaIdentificadores {
         }
     }
 
-    public static int tamano(){
-        return tabla.size();
-    }
 
     //Verificamos la existencia del token en nuestra tabla
     public static boolean checkExistenciaId(Token token){
 
         return tabla.containsKey(token.image);
     }
+    //Obtenemos el tipo de dato del token a traves de la tabla identificadores
     public static String obtenerTipo(Token t){
         return tabla.get(t.image);
     }

@@ -18,13 +18,13 @@ public class Pseasy {
                 pseasy.programa();
 
                 if(tabla.size() != 0){
-                    System.out.println("ERRORES PROGRAMA");
+                    System.out.println("PROGRAM ERRORS");
                     System.out.println("=================");
                     for(String i:tabla){
                         System.out.println(i);
                     }
                 }else{
-                    System.out.println("\nCompilacion completada con exito");
+                    System.out.println("\ncompilation generated with success");
 
                 }
               }catch(Exception e){
@@ -70,7 +70,7 @@ TOKEN : {
     |
     <CARACTER_TEXTO: "'"( ~["'"] | "" )"'">
     |
-    <NUMERO_ENTERO:(<NUMERO>)+>
+    <NUMERO_ENTERO:("-" | "" | "+")(<NUMERO>)+>
     |
     <NUMERO_DECIMAL: ("-" | "" | "+")(<NUMERO>)+"."(<NUMERO>)+>
     |
@@ -318,6 +318,7 @@ Token operacion():{
     Token t = new Token();
  }{
     ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
+
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                     if(!TablaIdentificadores.checkExistenciaId(token)){
                                         tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
@@ -379,10 +380,9 @@ void declaracionVariables():{
                         }
                     }
 
-    (asignado=asignacion())? { //Se evavlua si se esta asignando el tipo correcto al identificador
-                    if(asignado.kind != 0){
-                              //System.out.println("identificador: " + identificador.image);
-                              //System.out.println("asignado: " + asignado.image);
+    (asignado=asignacion())? { //Se evalua si se esta asignando el tipo correcto al identificador
+                    if(asignado.kind != 0){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
+
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
                                       tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
                                         TablaIdentificadores.obtenerTipo(identificador) + " type");
@@ -406,6 +406,7 @@ void leerDato():{}{
 
 void imprimirDato():{}{
     //Modificar estructura
+
     LOOKAHEAD(3)<ESCRIBIR> <CADENA_TEXTO> <DELIMITADOR>
     |LOOKAHEAD(3)<ESCRIBIR><CADENA_TEXTO><COMA><VARIABLE><DELIMITADOR>
     |<ESCRIBIR><VARIABLE><DELIMITADOR>
@@ -421,7 +422,7 @@ void sentenciaSi():{}{
         Token t;
         do{
             t=getNextToken();
-        }while(t.kind != FIN_CONDICIONAL_SI);
+        }while(t.kind != FIN);
         tabla.add("Parser error:" + e.getMessage());
     }
 
@@ -439,6 +440,7 @@ void sentenciaSegun():{}{
 
 //Ciclo for
 void sentenciaPara():{}{
+
     try{
         <INICIO_CICLO_PARA><VARIABLE><ASIGNACION>( constantes() | <VARIABLE> )
             <CONDICION_CICLO_PARA> condicion() (<INCREMENTO_CICLO_PARA>|<DECREMENTO_CICLO_PARA>) ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
@@ -453,13 +455,13 @@ void sentenciaPara():{}{
     }
 
 }
-//Ciclo while
+//Ciclo do while
 void sentenciaRepetir():{}{
 
     <INICIO_CICLO_REPETIR> ( sentencias() )+
     <CONDICION_CICLO_REPETIR> condicion() <DELIMITADOR>
 }
-//Ciclo do while
+//Ciclo while
 void sentenciaMientras():{}{
 
     <INICIO_CICLO_MIENTRAS> condicion() <HACER>

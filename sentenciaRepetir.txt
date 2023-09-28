@@ -1,0 +1,6 @@
+Algoritmo
+    Definir entero x=0;
+    Repetir
+        Escribir "Hola mundo";
+    Finaliza cuando;
+FinAlgoritmo
