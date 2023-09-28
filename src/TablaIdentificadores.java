@@ -7,6 +7,9 @@ import java.util.HashMap;
 * En esta tabla se va a ir guardando los identificadores que se iran declarando con "Definir"
 * */
 public class TablaIdentificadores {
+
+    // En este HashMap vamos a ir guardado los identificadores(String) y su tipo (String)
+    //Un HashMap se compone de una llave(token) y un valor(tipo de dato)
     private static HashMap<String,String> tabla = new HashMap();
 
     private static ArrayList<Integer> enterosTipos = new ArrayList();

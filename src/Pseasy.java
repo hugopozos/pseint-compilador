@@ -320,6 +320,8 @@ public class Pseasy implements PseasyConstants {
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                                             token.beginLine + " column:" + token.beginColumn);
+                                                        }else{
+                                                            t=token;
                                                         }
         break;
       case CADENA_TEXTO:
@@ -821,17 +823,17 @@ public class Pseasy implements PseasyConstants {
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_3_2() {
-    if (jj_scan_token(ESCRIBIR)) return true;
-    if (jj_scan_token(CADENA_TEXTO)) return true;
-    if (jj_scan_token(COMA)) return true;
-    return false;
-  }
-
   private boolean jj_3_1() {
     if (jj_scan_token(ESCRIBIR)) return true;
     if (jj_scan_token(CADENA_TEXTO)) return true;
     if (jj_scan_token(DELIMITADOR)) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_scan_token(ESCRIBIR)) return true;
+    if (jj_scan_token(CADENA_TEXTO)) return true;
+    if (jj_scan_token(COMA)) return true;
     return false;
   }
 

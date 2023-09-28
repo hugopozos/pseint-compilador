@@ -1,5 +1,9 @@
 Algoritmo
 
-    Definir entero x="cadena";
+    definir entero res;
+    definir entero y;
+    definir cadena x;
+
+    res = y + x;
 
 FinAlgoritmo

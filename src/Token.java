@@ -27,7 +27,7 @@ public class Token {
   /**
    * The string image of the token.
    */
-  public String image;
+  public String image; //ENTERO -> "entero"
 
   /**
    * A reference to the next regular (non-special) token from the input

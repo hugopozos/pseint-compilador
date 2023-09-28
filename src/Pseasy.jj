@@ -336,6 +336,8 @@ Token operacion():{
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                                             token.beginLine + " column:" + token.beginColumn);
+                                                        }else{
+                                                            t=token;
                                                         }
 }
     | t=constantes()| operacionParentesis() ))*
