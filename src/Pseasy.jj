@@ -212,6 +212,8 @@ void programa(): { }{
             do{
                 t=getNextToken();
             }while(t.kind != EOF);
+
+
             tabla.add("Parser Error:" + e.getMessage());
        }
 
@@ -220,6 +222,7 @@ void programa(): { }{
 void sentencias():{
     TablaIdentificadores.inicializarTipos();
  }{
+
             sentenciaAsignacion() |
             sentenciaDeclaracionVariables() |
             leerDato() |
@@ -229,6 +232,8 @@ void sentencias():{
             sentenciaPara() |
             sentenciaRepetir() |
             sentenciaMientras()
+
+
 
 }
 //ASIGNACION DE VALOR
@@ -271,7 +276,7 @@ void sentenciaAsignacion():{
         Token t;
         do{
             t=getNextToken();
-        }while(t.kind != DELIMITADOR);
+        }while(t.kind != DELIMITADOR && t.kind != EOF);
         tabla.add("Parser error:" + e.getMessage());
     }
 }
@@ -287,7 +292,7 @@ void sentenciaDeclaracionVariables():{}{
             do{
                 t=getNextToken();
                 //VERIFICAR ERROR DE PUNTO Y COMA AL FINAL
-            }while(t.kind != DELIMITADOR);
+            }while(t.kind != DELIMITADOR && t.kind != EOF);
             tabla.add("Parser error:" + e.getMessage());
     }
 }
@@ -370,6 +375,9 @@ void declaracionVariables():{
     Token asignado = new Token();
     String tipoDato = "";
  }{
+
+
+
     <DEFINIR>
     tipoDato=tiposDato()
     <VARIABLE> {
@@ -390,7 +398,8 @@ void declaracionVariables():{
                                         TablaIdentificadores.obtenerTipo(identificador) + " type");
                                   }
                           }
-}
+    }
+
 }
 String tiposDato():{ }{
     // Regresamos el patron que coincide con el token
@@ -402,16 +411,32 @@ String tiposDato():{ }{
 }
 
 void leerDato():{}{
+    try{
+        <LEER> <VARIABLE> <DELIMITADOR>
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != EOF);
+        tabla.add("Parser error:" + e.getMessage());
+    }
 
-    <LEER> <VARIABLE> <DELIMITADOR>
 }
 
 void imprimirDato():{}{
     //Modificar estructura
+    try{
+        LOOKAHEAD(3)<ESCRIBIR> <CADENA_TEXTO> <DELIMITADOR>
+        |LOOKAHEAD(3)<ESCRIBIR><CADENA_TEXTO><COMA><VARIABLE><DELIMITADOR>
+        |<ESCRIBIR><VARIABLE><DELIMITADOR>
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != FIN);
+        tabla.add("Parser error:" + e.getMessage());
+    }
 
-    LOOKAHEAD(3)<ESCRIBIR> <CADENA_TEXTO> <DELIMITADOR>
-    |LOOKAHEAD(3)<ESCRIBIR><CADENA_TEXTO><COMA><VARIABLE><DELIMITADOR>
-    |<ESCRIBIR><VARIABLE><DELIMITADOR>
     //<ESCRIBIR> ( constantes() | <VARIABLE> ) <DELIMITADOR>
 }
 
@@ -424,7 +449,7 @@ void sentenciaSi():{}{
         Token t;
         do{
             t=getNextToken();
-        }while(t.kind != FIN);
+        }while(t.kind != EOF);
         tabla.add("Parser error:" + e.getMessage());
     }
 
@@ -443,18 +468,12 @@ void sentenciaSegun():{}{
 //Ciclo for
 void sentenciaPara():{}{
 
-    try{
+
         <INICIO_CICLO_PARA><VARIABLE><ASIGNACION>( constantes() | <VARIABLE> )
             <CONDICION_CICLO_PARA> condicion() (<INCREMENTO_CICLO_PARA>|<DECREMENTO_CICLO_PARA>) ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
             ( sentencias() )+
             <FIN_CICLO_PARA>
-    }catch(ParseException e){
-        Token t;
-        do{
-            t=getNextToken();
-        }while(t.kind != FIN); //FIN_CICLO_PARA.kind = 44
-        tabla.add("Parser error:" + e.getMessage());
-    }
+
 
 }
 //Ciclo do while

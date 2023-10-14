@@ -58,6 +58,8 @@ public class Pseasy implements PseasyConstants {
             do{
                 t=getNextToken();
             }while(t.kind != EOF);
+
+
             tabla.add("Parser Error:" + e.getMessage());
     }
   }
@@ -133,7 +135,7 @@ public class Pseasy implements PseasyConstants {
         Token t;
         do{
             t=getNextToken();
-        }while(t.kind != DELIMITADOR);
+        }while(t.kind != DELIMITADOR && t.kind != EOF);
         tabla.add("Parser error:" + e.getMessage());
     }
   }
@@ -149,7 +151,7 @@ public class Pseasy implements PseasyConstants {
             do{
                 t=getNextToken();
                 //VERIFICAR ERROR DE PUNTO Y COMA AL FINAL
-            }while(t.kind != DELIMITADOR);
+            }while(t.kind != DELIMITADOR && t.kind != EOF);
             tabla.add("Parser error:" + e.getMessage());
     }
   }
@@ -510,34 +512,50 @@ public class Pseasy implements PseasyConstants {
   }
 
   final public void leerDato() throws ParseException {
-    jj_consume_token(LEER);
-    jj_consume_token(VARIABLE);
-    jj_consume_token(DELIMITADOR);
+    try {
+      jj_consume_token(LEER);
+      jj_consume_token(VARIABLE);
+      jj_consume_token(DELIMITADOR);
+    } catch (ParseException e) {
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != EOF);
+        tabla.add("Parser error:" + e.getMessage());
+    }
   }
 
   final public void imprimirDato() throws ParseException {
-    if (jj_2_1(3)) {
-      jj_consume_token(ESCRIBIR);
-      jj_consume_token(CADENA_TEXTO);
-      jj_consume_token(DELIMITADOR);
-    } else if (jj_2_2(3)) {
-      jj_consume_token(ESCRIBIR);
-      jj_consume_token(CADENA_TEXTO);
-      jj_consume_token(COMA);
-      jj_consume_token(VARIABLE);
-      jj_consume_token(DELIMITADOR);
-    } else {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case ESCRIBIR:
+    try {
+      if (jj_2_1(3)) {
         jj_consume_token(ESCRIBIR);
+        jj_consume_token(CADENA_TEXTO);
+        jj_consume_token(DELIMITADOR);
+      } else if (jj_2_2(3)) {
+        jj_consume_token(ESCRIBIR);
+        jj_consume_token(CADENA_TEXTO);
+        jj_consume_token(COMA);
         jj_consume_token(VARIABLE);
         jj_consume_token(DELIMITADOR);
-        break;
-      default:
-        jj_la1[16] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+      } else {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case ESCRIBIR:
+          jj_consume_token(ESCRIBIR);
+          jj_consume_token(VARIABLE);
+          jj_consume_token(DELIMITADOR);
+          break;
+        default:
+          jj_la1[16] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
       }
+    } catch (ParseException e) {
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != FIN);
+        tabla.add("Parser error:" + e.getMessage());
     }
   }
 
@@ -599,7 +617,7 @@ public class Pseasy implements PseasyConstants {
         Token t;
         do{
             t=getNextToken();
-        }while(t.kind != FIN);
+        }while(t.kind != EOF);
         tabla.add("Parser error:" + e.getMessage());
     }
   }
@@ -676,81 +694,73 @@ public class Pseasy implements PseasyConstants {
 
 //Ciclo for
   final public void sentenciaPara() throws ParseException {
-    try {
-      jj_consume_token(INICIO_CICLO_PARA);
+    jj_consume_token(INICIO_CICLO_PARA);
+    jj_consume_token(VARIABLE);
+    jj_consume_token(ASIGNACION);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case CADENA_TEXTO:
+    case CARACTER_TEXTO:
+    case NUMERO_ENTERO:
+    case NUMERO_DECIMAL:
+    case BOOLEANO_FALSO:
+    case BOOLEANO_VERDADERO:
+      constantes();
+      break;
+    case VARIABLE:
       jj_consume_token(VARIABLE);
-      jj_consume_token(ASIGNACION);
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case CADENA_TEXTO:
-      case CARACTER_TEXTO:
-      case NUMERO_ENTERO:
-      case NUMERO_DECIMAL:
-      case BOOLEANO_FALSO:
-      case BOOLEANO_VERDADERO:
-        constantes();
-        break;
-      case VARIABLE:
-        jj_consume_token(VARIABLE);
-        break;
-      default:
-        jj_la1[24] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-      jj_consume_token(CONDICION_CICLO_PARA);
-      condicion();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case INCREMENTO_CICLO_PARA:
-        jj_consume_token(INCREMENTO_CICLO_PARA);
-        break;
-      case DECREMENTO_CICLO_PARA:
-        jj_consume_token(DECREMENTO_CICLO_PARA);
-        break;
-      default:
-        jj_la1[25] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case NUMERO_ENTERO:
-        jj_consume_token(NUMERO_ENTERO);
-        break;
-      case NUMERO_DECIMAL:
-        jj_consume_token(NUMERO_DECIMAL);
-        break;
-      default:
-        jj_la1[26] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-      label_11:
-      while (true) {
-        sentencias();
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case LEER:
-        case ESCRIBIR:
-        case DEFINIR:
-        case INICIO_CICLO_PARA:
-        case INICIO_CICLO_MIENTRAS:
-        case INICIO_CICLO_REPETIR:
-        case INICIO_CONDICIONAL_SI:
-        case INICIO_CONDICIONAL_SEGUN:
-        case VARIABLE:
-          ;
-          break;
-        default:
-          jj_la1[27] = jj_gen;
-          break label_11;
-        }
-      }
-      jj_consume_token(FIN_CICLO_PARA);
-    } catch (ParseException e) {
-        Token t;
-        do{
-            t=getNextToken();
-        }while(t.kind != FIN); //FIN_CICLO_PARA.kind = 44
-        tabla.add("Parser error:" + e.getMessage());
+      break;
+    default:
+      jj_la1[24] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
     }
+    jj_consume_token(CONDICION_CICLO_PARA);
+    condicion();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case INCREMENTO_CICLO_PARA:
+      jj_consume_token(INCREMENTO_CICLO_PARA);
+      break;
+    case DECREMENTO_CICLO_PARA:
+      jj_consume_token(DECREMENTO_CICLO_PARA);
+      break;
+    default:
+      jj_la1[25] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case NUMERO_ENTERO:
+      jj_consume_token(NUMERO_ENTERO);
+      break;
+    case NUMERO_DECIMAL:
+      jj_consume_token(NUMERO_DECIMAL);
+      break;
+    default:
+      jj_la1[26] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    label_11:
+    while (true) {
+      sentencias();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case LEER:
+      case ESCRIBIR:
+      case DEFINIR:
+      case INICIO_CICLO_PARA:
+      case INICIO_CICLO_MIENTRAS:
+      case INICIO_CICLO_REPETIR:
+      case INICIO_CONDICIONAL_SI:
+      case INICIO_CONDICIONAL_SEGUN:
+      case VARIABLE:
+        ;
+        break;
+      default:
+        jj_la1[27] = jj_gen;
+        break label_11;
+      }
+    }
+    jj_consume_token(FIN_CICLO_PARA);
   }
 
 //Ciclo do while

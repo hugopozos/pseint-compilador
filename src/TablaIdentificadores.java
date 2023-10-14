@@ -86,10 +86,12 @@ public class TablaIdentificadores {
         //System.out.println("Identificador:" + identificador);
 
 
+            //Obtenemos el tipo de nuestro token identificador a partir de la tabla de simbolos
             String tipo = tabla.get(identificador.image).toLowerCase();
 
 
             //System.out.println("tipo de indentificador:" + tipo);
+            //Obtenemos directamente el kind asignado
             int kind = asignado.kind;
 
             //Si el kind que asignado es 58 quiere decir que es identificador
