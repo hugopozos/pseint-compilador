@@ -31,10 +31,14 @@ public class Pseasy {
                 }else{
                     System.out.println("\ncompilation generated with success");
                     //Aqui generar el archivo con el codigo intermedio
-                    ArchivoCodigoIntermedio codigoIntermedio = new ArchivoCodigoIntermedio("codigoIntermedio");
+                    if(GeneradorCodigo.representacionIntermedia.size() > 0){
+                    ArchivoCodigoIntermedio codigoIntermedio = new ArchivoCodigoIntermedio("codigoIntermedio.txt");
 
-                    //Se escribe las sentencias de codigo intermedio almacenadas en el arreglo representacionIntermedia
-                    codigoIntermedio.escribirArchivo(GeneradorCodigo.representacionIntermedia);
+                        //Se escribe las sentencias de codigo intermedio almacenadas en el arreglo representacionIntermedia
+
+                        codigoIntermedio.escribirArchivo(GeneradorCodigo.representacionIntermedia);
+                    }
+
                 }
               }catch(Exception e){
                 System.out.println(e.getMessage());
@@ -337,13 +341,17 @@ Token condicion():{Token asignado = new Token();} {
     ( operadoresRelacionales() operacion() )*
 }
 
-
+//AQUI HICIMOS MODIFICACIONES PARA CODIGO INTERMEDIO
 Token operacion():{
     Token t = new Token();
-    Token t2 = new Token();
+
+    //Variables para manejar el codigo intermedio
+    String arg1 = "";
+    String arg2 = "";
     String operador = "";
-    String aux;
+
  }{
+    //Aqui guardamos  el valor de t en arg1
     ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
 
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
@@ -352,12 +360,14 @@ Token operacion():{
                                                     token.beginLine + " column:" + token.beginColumn);
                                     }else{
                                         t=token;
+                                        arg1=token.image;
                                     }
 
 }
-    | t=constantes()
+    | t=constantes() {arg1=t.image;}
     | operacionParentesis() )
 
+    //Aqui guardamos el valor de t en arg2
     (operador=operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
@@ -365,12 +375,16 @@ Token operacion():{
                                                             token.beginLine + " column:" + token.beginColumn);
                                                         }else{
                                                             t=token;
+                                                            arg2=token.image;
+                                                            arg1=GeneradorCodigo.operadoresAritmeticos(arg1, arg2,operador);
                                                         }
 }
-    | t2=constantes()| operacionParentesis() ))*
+
+    | t=constantes() {arg2=t.image; arg1=GeneradorCodigo.operadoresAritmeticos(arg1, arg2,operador);}
+    | operacionParentesis() ))*
     {
-        //VERIFICAR ESTOS CAMBIOS **POSIBLE ERROR
-        aux=GeneradorCodigo.operadoresAritmeticos(t.image, t2.image,operador); return t2;}
+        return t;
+        }
 }
 
 void operacionParentesis():{}{

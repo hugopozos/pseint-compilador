@@ -24,10 +24,14 @@ public class Pseasy implements PseasyConstants {
                 }else{
                     System.out.println("\ncompilation generated with success");
                     //Aqui generar el archivo con el codigo intermedio
-                    ArchivoCodigoIntermedio codigoIntermedio = new ArchivoCodigoIntermedio("codigoIntermedio");
+                    if(GeneradorCodigo.representacionIntermedia.size() > 0){
+                    ArchivoCodigoIntermedio codigoIntermedio = new ArchivoCodigoIntermedio("codigoIntermedio.txt");
 
-                    //Se escribe las sentencias de codigo intermedio almacenadas en el arreglo representacionIntermedia
-                    codigoIntermedio.escribirArchivo(GeneradorCodigo.representacionIntermedia);
+                        //Se escribe las sentencias de codigo intermedio almacenadas en el arreglo representacionIntermedia
+
+                        codigoIntermedio.escribirArchivo(GeneradorCodigo.representacionIntermedia);
+                    }
+
                 }
               }catch(Exception e){
                 System.out.println(e.getMessage());
@@ -250,11 +254,14 @@ public class Pseasy implements PseasyConstants {
     throw new Error("Missing return statement in function");
   }
 
+//AQUI HICIMOS MODIFICACIONES PARA CODIGO INTERMEDIO
   final public Token operacion() throws ParseException {
     Token t = new Token();
-    Token t2 = new Token();
+
+    //Variables para manejar el codigo intermedio
+    String arg1 = "";
+    String arg2 = "";
     String operador = "";
-    String aux;
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -278,6 +285,7 @@ public class Pseasy implements PseasyConstants {
                                                     token.beginLine + " column:" + token.beginColumn);
                                     }else{
                                         t=token;
+                                        arg1=token.image;
                                     }
       break;
     case CADENA_TEXTO:
@@ -287,6 +295,7 @@ public class Pseasy implements PseasyConstants {
     case BOOLEANO_FALSO:
     case BOOLEANO_VERDADERO:
       t = constantes();
+                      arg1=t.image;
       break;
     case PAREN_ABIERTO:
       operacionParentesis();
@@ -341,6 +350,8 @@ public class Pseasy implements PseasyConstants {
                                                             token.beginLine + " column:" + token.beginColumn);
                                                         }else{
                                                             t=token;
+                                                            arg2=token.image;
+                                                            arg1=GeneradorCodigo.operadoresAritmeticos(arg1, arg2,operador);
                                                         }
         break;
       case CADENA_TEXTO:
@@ -349,7 +360,8 @@ public class Pseasy implements PseasyConstants {
       case NUMERO_DECIMAL:
       case BOOLEANO_FALSO:
       case BOOLEANO_VERDADERO:
-        t2 = constantes();
+        t = constantes();
+                      arg2=t.image; arg1=GeneradorCodigo.operadoresAritmeticos(arg1, arg2,operador);
         break;
       case PAREN_ABIERTO:
         operacionParentesis();
@@ -360,8 +372,7 @@ public class Pseasy implements PseasyConstants {
         throw new ParseException();
       }
     }
-        //VERIFICAR ESTOS CAMBIOS **POSIBLE ERROR
-        aux=GeneradorCodigo.operadoresAritmeticos(t.image, t2.image,operador); {if (true) return t2;}
+        {if (true) return t;}
     throw new Error("Missing return statement in function");
   }
 
