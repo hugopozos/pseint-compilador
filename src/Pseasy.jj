@@ -9,9 +9,14 @@ PARSER_BEGIN(Pseasy)
 package src;
 import java.util.ArrayList;
 import src.TablaIdentificadores;
+import src.ArchivoCodigoIntermedio;
+import src.GeneradorCodigo;
 public class Pseasy {
 
         static ArrayList<String> tabla = PseasyTokenManager.tabla;
+
+
+
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -25,17 +30,26 @@ public class Pseasy {
                     }
                 }else{
                     System.out.println("\ncompilation generated with success");
+                    //Aqui generar el archivo con el codigo intermedio
+                    ArchivoCodigoIntermedio codigoIntermedio = new ArchivoCodigoIntermedio("codigoIntermedio");
 
+                    //Se escribe las sentencias de codigo intermedio almacenadas en el arreglo representacionIntermedia
+                    codigoIntermedio.escribirArchivo(GeneradorCodigo.representacionIntermedia);
                 }
               }catch(Exception e){
                 System.out.println(e.getMessage());
               }
           }
+
+          //Metodos para generar las sentencias de codigo intermedio
+
+
         }
 PARSER_END(Pseasy)
 
 TOKEN_MGR_DECLS:{
     static ArrayList<String> tabla = new ArrayList();
+
 }
 
 // Inicio y fin del programa
@@ -256,6 +270,8 @@ void sentenciaAsignacion():{
 
                          }
         }
+        //Aqui se guarda 10
+        //Con el cambio se guardaria t1
         asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
                         if(asignado.kind !=0 && identificador.kind !=0){ //Con esta sentencia comprobamos que el elemento asignado no sea null
                             //Si existe el identificador comprobamos su tipo
@@ -263,6 +279,9 @@ void sentenciaAsignacion():{
 
                                     tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
                                             TablaIdentificadores.obtenerTipo(identificador) + " type");
+                                //Si la expresion es semanticamente correcta, lo guardamos en nuestro arreglo de representacion intermedia
+                                }else{
+                                    GeneradorCodigo.asignacion(identificador.image,GeneradorCodigo.obtenerUltimoTemporal());
                                 }
 
                         }
@@ -321,6 +340,9 @@ Token condicion():{Token asignado = new Token();} {
 
 Token operacion():{
     Token t = new Token();
+    Token t2 = new Token();
+    String operador = "";
+    String aux;
  }{
     ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
 
@@ -336,7 +358,7 @@ Token operacion():{
     | t=constantes()
     | operacionParentesis() )
 
-    (operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
+    (operador=operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
@@ -345,20 +367,30 @@ Token operacion():{
                                                             t=token;
                                                         }
 }
-    | t=constantes()| operacionParentesis() ))*
-    {return t;}
+    | t2=constantes()| operacionParentesis() ))*
+    {
+        //VERIFICAR ESTOS CAMBIOS **POSIBLE ERROR
+        aux=GeneradorCodigo.operadoresAritmeticos(t.image, t2.image,operador); return t2;}
 }
 
 void operacionParentesis():{}{
     <PAREN_ABIERTO> operacion() <PAREN_CERRADO>
 }
 
-void operadores():{}{
-    operadoresAritmeticos() | operadoresLogicos() | operadoresRelacionales()
+String operadores():{
+    String operador;
+ }{
+    operador=operadoresAritmeticos() {return operador;}
+    | operadoresLogicos() | operadoresRelacionales()
+
 }
 
-void operadoresAritmeticos():{}{
-    <SUMA> | <RESTA> | <MULTIPLICACION> | <DIVISION> | <MODULO>
+String operadoresAritmeticos():{}{
+    <SUMA> {return token.image;}
+    | <RESTA>{return token.image;}
+    | <MULTIPLICACION>{return token.image;}
+    | <DIVISION>{return token.image;}
+    | <MODULO>{return token.image;}
 }
 
 void operadoresRelacionales():{}{

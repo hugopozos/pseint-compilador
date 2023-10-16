@@ -2,6 +2,8 @@
 package src;
 import java.util.ArrayList;
 import src.TablaIdentificadores;
+import src.ArchivoCodigoIntermedio;
+import src.GeneradorCodigo;
 
 /** Token Manager. */
 public class PseasyTokenManager implements PseasyConstants

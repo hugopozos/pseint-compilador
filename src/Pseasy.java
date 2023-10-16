@@ -2,9 +2,14 @@
 package src;
 import java.util.ArrayList;
 import src.TablaIdentificadores;
+import src.ArchivoCodigoIntermedio;
+import src.GeneradorCodigo;
 public class Pseasy implements PseasyConstants {
 
         static ArrayList<String> tabla = PseasyTokenManager.tabla;
+
+
+
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -18,7 +23,11 @@ public class Pseasy implements PseasyConstants {
                     }
                 }else{
                     System.out.println("\ncompilation generated with success");
+                    //Aqui generar el archivo con el codigo intermedio
+                    ArchivoCodigoIntermedio codigoIntermedio = new ArchivoCodigoIntermedio("codigoIntermedio");
 
+                    //Se escribe las sentencias de codigo intermedio almacenadas en el arreglo representacionIntermedia
+                    codigoIntermedio.escribirArchivo(GeneradorCodigo.representacionIntermedia);
                 }
               }catch(Exception e){
                 System.out.println(e.getMessage());
@@ -118,7 +127,9 @@ public class Pseasy implements PseasyConstants {
                             identificador = token;
 
                          }
-      asignado = asignacion();
+      //Aqui se guarda 10
+              //Con el cambio se guardaria t1
+              asignado = asignacion();
                                 //Se evalua si se esta asignando el tipo correcto al identificador
                         if(asignado.kind !=0 && identificador.kind !=0){ //Con esta sentencia comprobamos que el elemento asignado no sea null
                             //Si existe el identificador comprobamos su tipo
@@ -126,6 +137,9 @@ public class Pseasy implements PseasyConstants {
 
                                     tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
                                             TablaIdentificadores.obtenerTipo(identificador) + " type");
+                                //Si la expresion es semanticamente correcta, lo guardamos en nuestro arreglo de representacion intermedia
+                                }else{
+                                    GeneradorCodigo.asignacion(identificador.image,GeneradorCodigo.obtenerUltimoTemporal());
                                 }
 
                         }
@@ -238,6 +252,9 @@ public class Pseasy implements PseasyConstants {
 
   final public Token operacion() throws ParseException {
     Token t = new Token();
+    Token t2 = new Token();
+    String operador = "";
+    String aux;
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -301,7 +318,7 @@ public class Pseasy implements PseasyConstants {
         jj_la1[7] = jj_gen;
         break label_4;
       }
-      operadores();
+      operador = operadores();
       label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -317,7 +334,7 @@ public class Pseasy implements PseasyConstants {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case VARIABLE:
         jj_consume_token(VARIABLE);
-                                                     //EXISTENCIA DE IDENTIFICADORES
+                                                              //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                                         if(!TablaIdentificadores.checkExistenciaId(token)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
@@ -332,7 +349,7 @@ public class Pseasy implements PseasyConstants {
       case NUMERO_DECIMAL:
       case BOOLEANO_FALSO:
       case BOOLEANO_VERDADERO:
-        t = constantes();
+        t2 = constantes();
         break;
       case PAREN_ABIERTO:
         operacionParentesis();
@@ -343,7 +360,8 @@ public class Pseasy implements PseasyConstants {
         throw new ParseException();
       }
     }
-     {if (true) return t;}
+        //VERIFICAR ESTOS CAMBIOS **POSIBLE ERROR
+        aux=GeneradorCodigo.operadoresAritmeticos(t.image, t2.image,operador); {if (true) return t2;}
     throw new Error("Missing return statement in function");
   }
 
@@ -353,14 +371,16 @@ public class Pseasy implements PseasyConstants {
     jj_consume_token(PAREN_CERRADO);
   }
 
-  final public void operadores() throws ParseException {
+  final public String operadores() throws ParseException {
+    String operador;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case SUMA:
     case RESTA:
     case MULTIPLICACION:
     case DIVISION:
     case MODULO:
-      operadoresAritmeticos();
+      operador = operadoresAritmeticos();
+                                      {if (true) return operador;}
       break;
     case LOGICO_AND:
     case LOGICO_OR:
@@ -379,30 +399,37 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
   }
 
-  final public void operadoresAritmeticos() throws ParseException {
+  final public String operadoresAritmeticos() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case SUMA:
       jj_consume_token(SUMA);
+            {if (true) return token.image;}
       break;
     case RESTA:
       jj_consume_token(RESTA);
+              {if (true) return token.image;}
       break;
     case MULTIPLICACION:
       jj_consume_token(MULTIPLICACION);
+                       {if (true) return token.image;}
       break;
     case DIVISION:
       jj_consume_token(DIVISION);
+                 {if (true) return token.image;}
       break;
     case MODULO:
       jj_consume_token(MODULO);
+               {if (true) return token.image;}
       break;
     default:
       jj_la1[11] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
   }
 
   final public void operadoresRelacionales() throws ParseException {
@@ -833,17 +860,17 @@ public class Pseasy implements PseasyConstants {
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_3_1() {
-    if (jj_scan_token(ESCRIBIR)) return true;
-    if (jj_scan_token(CADENA_TEXTO)) return true;
-    if (jj_scan_token(DELIMITADOR)) return true;
-    return false;
-  }
-
   private boolean jj_3_2() {
     if (jj_scan_token(ESCRIBIR)) return true;
     if (jj_scan_token(CADENA_TEXTO)) return true;
     if (jj_scan_token(COMA)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(ESCRIBIR)) return true;
+    if (jj_scan_token(CADENA_TEXTO)) return true;
+    if (jj_scan_token(DELIMITADOR)) return true;
     return false;
   }
 
@@ -1146,5 +1173,8 @@ public class Pseasy implements PseasyConstants {
     int arg;
     JJCalls next;
   }
+
+          //Metodos para generar las sentencias de codigo intermedio
+
 
         }
