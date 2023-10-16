@@ -143,7 +143,15 @@ public class Pseasy implements PseasyConstants {
                                             TablaIdentificadores.obtenerTipo(identificador) + " type");
                                 //Si la expresion es semanticamente correcta, lo guardamos en nuestro arreglo de representacion intermedia
                                 }else{
-                                    GeneradorCodigo.asignacion(identificador.image,GeneradorCodigo.obtenerUltimoTemporal());
+                                    if(GeneradorCodigo.temporales.size() > 0){
+                                        //System.out.println(GeneradorCodigo.obtenerUltimoTemporal());
+                                        GeneradorCodigo.asignacion(identificador.image,GeneradorCodigo.obtenerUltimoTemporal());
+
+
+                                    }else{
+                                        GeneradorCodigo.asignacion(identificador.image,asignado.image);
+
+                                    }
                                 }
 
                         }

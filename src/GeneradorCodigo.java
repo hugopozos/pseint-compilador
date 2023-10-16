@@ -11,7 +11,7 @@ public class GeneradorCodigo {
     public static ArrayList<String> temporales = new ArrayList();
 
     public static String obtenerUltimoTemporal(){
-        if(temporales.size() > 2){
+        if(temporales.size() > 0) {
             return temporales.get(temporales.size() - 1);
         }
         return null;
@@ -22,7 +22,7 @@ public class GeneradorCodigo {
         String tmp = "tmp"+tmpActual;
         temporales.add(tmp);
         String aux = tmp + ":=" + ex1 + op + ex2;
-        System.out.println(aux);
+        //System.out.println(aux);
         //Almacenarlo en tabla identificadores
         representacionIntermedia.add(aux + "\n");
         return tmp;
