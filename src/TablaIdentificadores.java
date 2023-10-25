@@ -20,6 +20,8 @@ public class TablaIdentificadores {
     private static ArrayList<Integer> cadenaTipos = new ArrayList();
 
     //En este metodo vamos agregando los identificadores
+
+    //Modificamos
     public static void insertarIdentificadores(Token token, String tipo){tabla.put(token.image,tipo);}
 
     public static void inicializarTipos(){
@@ -57,6 +59,8 @@ public class TablaIdentificadores {
     public static String obtenerTipo(Token t){
         return tabla.get(t.image);
     }
+
+
     private static int obtenerTipoKind(Token t){
         String tipoString = obtenerTipo(t);
         int kind = 0;

@@ -1,4 +1,5 @@
 Algoritmo
     Definir entero x;
     Definir entero y;
+    x = y;
 FinAlgoritmo

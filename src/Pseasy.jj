@@ -8,10 +8,18 @@ options {
 PARSER_BEGIN(Pseasy)
 package src;
 import java.util.ArrayList;
+import java.io.*;
 import src.TablaIdentificadores;
 public class Pseasy {
 
+
         static ArrayList<String> tabla = PseasyTokenManager.tabla;
+
+        //Arreglo para guardar lo generado por el codigo intermedio
+        static ArrayList<String> codigoIntermedio = PseasyTokenManager.codigoIntermedio;
+
+        //Variables para generacion de codigo intermedio
+        private static int tmpContador = 0;
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -25,17 +33,47 @@ public class Pseasy {
                     }
                 }else{
                     System.out.println("\ncompilation generated with success");
+                    ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio);
 
                 }
               }catch(Exception e){
                 System.out.println(e.getMessage());
               }
           }
+
+          //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
+          private static void asignacion(String id, String exp){
+            String tmp = id +" = " + exp + "\n";
+            codigoIntermedio.add(tmp);
+          }
         }
+
+ // ------------------------ GENERACION CODIGO INTERMEDIO -----------------------------
+
+
+ //CLASE PARA ESCRIBIR EL CODIGO INTERMEDIO EN UN ARCHIVO
+class ArchivoCodigoIntermedio {
+
+    public static void escribirArchivo(ArrayList<String>codigoIntermedio){
+        String fileName = "codigoIntermedio\\codigo_intermedio.txt";
+        File archivo = new File(fileName);
+        try{
+            PrintWriter salida = new PrintWriter(archivo);
+            for(String e:codigoIntermedio){
+                salida.print(e);
+            }
+            salida.close();
+        }catch(FileNotFoundException ex){
+            System.out.println("No se encontro el archivo");
+        }
+    }
+}
+
 PARSER_END(Pseasy)
 
 TOKEN_MGR_DECLS:{
     static ArrayList<String> tabla = new ArrayList();
+    static ArrayList<String> codigoIntermedio = new ArrayList();
 }
 
 // Inicio y fin del programa
@@ -237,7 +275,7 @@ void sentencias():{
 
 }
 //ASIGNACION DE VALOR
-//Aqui hay un problema
+//CAMBIAR FORMA EN COMO SE HACE LA C
 void sentenciaAsignacion():{
     Token identificador = new Token();
     Token asignado = new Token();
@@ -257,6 +295,8 @@ void sentenciaAsignacion():{
                          }
         }
         asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
+
+                        //CAMBIAR FORMA DE EVALUAR ESTO
                         if(asignado.kind !=0 && identificador.kind !=0){ //Con esta sentencia comprobamos que el elemento asignado no sea null
                             //Si existe el identificador comprobamos su tipo
                                 if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
