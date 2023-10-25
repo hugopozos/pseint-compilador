@@ -10,6 +10,9 @@ public class Pseasy implements PseasyConstants {
 
         //Arreglo para guardar lo generado por el codigo intermedio
         static ArrayList<String> codigoIntermedio = PseasyTokenManager.codigoIntermedio;
+
+        //Variables para generacion de codigo intermedio
+        private static int tmpContador = 0;
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -29,6 +32,12 @@ public class Pseasy implements PseasyConstants {
               }catch(Exception e){
                 System.out.println(e.getMessage());
               }
+          }
+
+          //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
+          private static void asignacion(String id, String exp){
+            String tmp = id +" = " + exp + "\n";
+            codigoIntermedio.add(tmp);
           }
 
 // Gramaticas
@@ -58,7 +67,7 @@ public class Pseasy implements PseasyConstants {
         sentencias();
       }
       jj_consume_token(FIN);
-
+                TablaIdentificadores.mostrarTabla();
     } catch (ParseException e) {
             Token t;
             do{
@@ -108,30 +117,32 @@ public class Pseasy implements PseasyConstants {
   }
 
 //ASIGNACION DE VALOR
-//Aqui hay un problema
+//CAMBIAR FORMA EN COMO SE HACE LA C
   final public void sentenciaAsignacion() throws ParseException {
-    Token identificador = new Token();
-    Token asignado = new Token();
+    String identificador = null;
+    String asignado = null;
     try {
       jj_consume_token(VARIABLE);
                         //EXISTENCIA DE IDENTIFICADORES
                         // Sino existe el id, lo guardamos en nuestra arreglo de errores
                         //System.out.println("Token:" + token);
-                         if(!TablaIdentificadores.checkExistenciaId(token)){
+                         if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                        token.beginLine + " column:" + token.beginColumn);
                          }else{
-                            identificador = token;
+                            identificador = token.image;
 
                          }
       asignado = asignacion();
                                 //Se evalua si se esta asignando el tipo correcto al identificador
-                        if(asignado.kind !=0 && identificador.kind !=0){ //Con esta sentencia comprobamos que el elemento asignado no sea null
+
+                        //CAMBIAR FORMA DE EVALUAR ESTO
+                        if(asignado == null && identificador ==null){ //Con esta sentencia comprobamos que el elemento asignado no sea null
                             //Si existe el identificador comprobamos su tipo
                                 if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
 
-                                    tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
-                                            TablaIdentificadores.obtenerTipo(identificador) + " type");
+                                    tabla.add("The token: " + asignado + " doesn't correspond to the " +
+                                            TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
                                 }
 
                         }
@@ -163,31 +174,31 @@ public class Pseasy implements PseasyConstants {
   }
 
 //CAMBIAMOS el tipo de dato retornado a token
-  final public Token constantes() throws ParseException {
+  final public String constantes() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NUMERO_ENTERO:
       jj_consume_token(NUMERO_ENTERO);
-                     {if (true) return token;}
+                     {if (true) return token.image;}
       break;
     case NUMERO_DECIMAL:
       jj_consume_token(NUMERO_DECIMAL);
-                         {if (true) return token;}
+                         {if (true) return token.image;}
       break;
     case CADENA_TEXTO:
       jj_consume_token(CADENA_TEXTO);
-                      {if (true) return token;}
+                      {if (true) return token.image;}
       break;
     case CARACTER_TEXTO:
       jj_consume_token(CARACTER_TEXTO);
-                        {if (true) return token;}
+                        {if (true) return token.image;}
       break;
     case BOOLEANO_FALSO:
       jj_consume_token(BOOLEANO_FALSO);
-                        {if (true) return token;}
+                        {if (true) return token.image;}
       break;
     case BOOLEANO_VERDADERO:
       jj_consume_token(BOOLEANO_VERDADERO);
-                            {if (true) return token;}
+                            {if (true) return token.image;}
       break;
     default:
       jj_la1[2] = jj_gen;
@@ -198,8 +209,8 @@ public class Pseasy implements PseasyConstants {
   }
 
 //ASIGNACION CORRECTA DE VALORES
-  final public Token asignacion() throws ParseException {
-                    Token asignado = new Token();
+  final public String asignacion() throws ParseException {
+                     String asignado = "";
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case ASIGNACION:
       jj_consume_token(ASIGNACION);
@@ -217,8 +228,8 @@ public class Pseasy implements PseasyConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public Token condicion() throws ParseException {
-                   Token asignado = new Token();
+  final public String condicion() throws ParseException {
+                    String asignado = "";
     asignado = operacion();
                           {if (true) return asignado;}
     label_2:
@@ -242,8 +253,8 @@ public class Pseasy implements PseasyConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public Token operacion() throws ParseException {
-    Token t = new Token();
+  final public String operacion() throws ParseException {
+    String t = "";
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -262,11 +273,11 @@ public class Pseasy implements PseasyConstants {
                                      //EXISTENCIA DE IDENTIFICADORES
 
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                                    if(!TablaIdentificadores.checkExistenciaId(token)){
+                                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                         tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                                     token.beginLine + " column:" + token.beginColumn);
                                     }else{
-                                        t=token;
+                                        t=token.image;
                                     }
       break;
     case CADENA_TEXTO:
@@ -325,11 +336,11 @@ public class Pseasy implements PseasyConstants {
         jj_consume_token(VARIABLE);
                                                      //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                                                        if(!TablaIdentificadores.checkExistenciaId(token)){
+                                                        if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                                             token.beginLine + " column:" + token.beginColumn);
                                                         }else{
-                                                            t=token;
+                                                            t=token.image;
                                                         }
         break;
       case CADENA_TEXTO:
@@ -455,18 +466,18 @@ public class Pseasy implements PseasyConstants {
 
 //DECLARACION DE VARIABLES:COMPROBACION DE TIPOS
   final public void declaracionVariables() throws ParseException {
-    Token identificador = new Token();
-    Token asignado = new Token();
+    String identificador = "";
+    String asignado = "";
     String tipoDato = "";
     jj_consume_token(DEFINIR);
     tipoDato = tiposDato();
     jj_consume_token(VARIABLE);
-                        if(TablaIdentificadores.checkExistenciaId(token)){
+                        if(TablaIdentificadores.checkExistenciaId(token.image)){
 
                             tabla.add("The identifier: " + token.image + " already exist, at line: " + token.beginLine + " column:" + token.endColumn);
                         }else{
-                            TablaIdentificadores.insertarIdentificadores(token,tipoDato);
-                            identificador = token;
+                            TablaIdentificadores.insertarIdentificadores(token.image,tipoDato);
+                            identificador = token.image;
                         }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case ASIGNACION:
@@ -478,11 +489,11 @@ public class Pseasy implements PseasyConstants {
       ;
     }
                                //Se evalua si se esta asignando el tipo correcto al identificador
-                    if(asignado.kind != 0){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
-
+                    if(!asignado.equals("")){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
+                        System.out.println("asignado =" + asignado);
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                      tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
-                                        TablaIdentificadores.obtenerTipo(identificador) + " type");
+                                      tabla.add("The token: " + asignado + " doesn't correspond to the " +
+                                        TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
                                   }
                           }
   }
@@ -1155,9 +1166,11 @@ public class Pseasy implements PseasyConstants {
 
         }
 
+ // ------------------------ GENERACION CODIGO INTERMEDIO -----------------------------
+
+
  //CLASE PARA ESCRIBIR EL CODIGO INTERMEDIO EN UN ARCHIVO
 class ArchivoCodigoIntermedio {
-
 
     public static void escribirArchivo(ArrayList<String>codigoIntermedio){
         String fileName = "codigoIntermedio\\codigo_intermedio.txt";

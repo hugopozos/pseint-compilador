@@ -22,7 +22,7 @@ public class TablaIdentificadores {
     //En este metodo vamos agregando los identificadores
 
     //Modificamos
-    public static void insertarIdentificadores(Token token, String tipo){tabla.put(token.image,tipo);}
+    public static void insertarIdentificadores(String token, String tipo){tabla.put(token,tipo);}
 
     public static void inicializarTipos(){
         //Guardamos el kind que hace referencia al dato primitivo de entero y el propio kind de entero
@@ -51,20 +51,22 @@ public class TablaIdentificadores {
 
 
     //Verificamos la existencia del token en nuestra tabla
-    public static boolean checkExistenciaId(Token token){
+    public static boolean checkExistenciaId(String token){
 
-        return tabla.containsKey(token.image);
+        return tabla.containsKey(token);
     }
     //Obtenemos el tipo de dato del token a traves de la tabla identificadores
-    public static String obtenerTipo(Token t){
-        return tabla.get(t.image);
+    public static String obtenerTipoidentificador(String t){
+        return tabla.get(t);
     }
 
 
-    private static int obtenerTipoKind(Token t){
-        String tipoString = obtenerTipo(t);
+    private static int obtenerTipoKindIdentificador(String t){
+        String tipoString = obtenerTipoidentificador(t);
         int kind = 0;
+        String tmp = (tipoString != null)  ? tipoString.toLowerCase() : "nulo";
         switch (tipoString.toLowerCase()){
+            case "nulo": kind = -1;
             case "entero": kind = 3;
             break;
             case "flotante": kind = 4;
@@ -77,13 +79,33 @@ public class TablaIdentificadores {
         return kind;
     }
 
+    private static int obtenerkindAsignado(String t){
+        int kind =0;
+        //Utilizar expresiones regulares
+        if(t.matches("\\d+")){
+            System.out.println("Es un entero");
+            kind = 3;
+        }else if(t.matches("falso") || t.matches("verdadero")){
+            System.out.println("Es un booleano");
+            kind = 7;
+        }else if(t.matches("\\d+[.]\\d+")){
+            System.out.println("Es un flotante");
+            kind = 4;
+        }else{
+            System.out.println("Es una cadena");
+            kind = 5;
+        }
+
+        return kind;
+    }
+
     //COMPROBACION DE TIPOS
     //ENTRE VARIABLE Y UN TERMINAL
     /*
     * Token identificador: hace referencia a la variable
     * Token asignado: hace referencia al terminal
     * */
-    public static boolean verifiacionConToken(Token identificador, Token asignado){
+    public static boolean verifiacionConToken(String identificador, String asignado){
         //Obtenemos el tipo de identificador en la tabla
 
         //System.out.println("kind de asignado:"+ asignado.kind);
@@ -91,18 +113,20 @@ public class TablaIdentificadores {
 
 
             //Obtenemos el tipo de nuestro token identificador a partir de la tabla de simbolos
-            String tipo = tabla.get(identificador.image).toLowerCase();
+            String tipo = tabla.get(identificador).toLowerCase();
+            int kind;
 
-
-            //System.out.println("tipo de indentificador:" + tipo);
-            //Obtenemos directamente el kind asignado
-            int kind = asignado.kind;
-
-            //Si el kind que asignado es 58 quiere decir que es identificador
-            //Por lo que debemos de obtener el kind de su tipo de dato (entero,flotante,booleano,etc)
-            if(kind == 58){
-                kind = obtenerTipoKind(asignado);
+            //Evaluamos si asignado no es una variable
+            //En dado caso que lo sea, obtenemos su tipo asociado
+            if(obtenerTipoidentificador(asignado) == null){
+                kind = obtenerkindAsignado(asignado);
+            }else{
+                //Si es un valor primitivo, aplicamos el metodo obtenerkindAsignado
+                kind = obtenerTipoKindIdentificador(asignado);
             }
+
+
+
 
             //Si mi tipo del identificador es entero, comprobamos que el token asignado sea igual de tipo entero o relacionado
             if(tipo.equals("entero") && enterosTipos.contains(kind)){

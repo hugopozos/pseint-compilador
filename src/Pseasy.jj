@@ -243,7 +243,7 @@ void programa(): { }{
        try{
           <INICIO>
           ( sentencias() )*
-          <FIN>{//TablaIdentificadores.mostrarTabla();
+          <FIN>{TablaIdentificadores.mostrarTabla();
        }
        }catch(ParseException e){
             Token t;
@@ -277,8 +277,8 @@ void sentencias():{
 //ASIGNACION DE VALOR
 //CAMBIAR FORMA EN COMO SE HACE LA C
 void sentenciaAsignacion():{
-    Token identificador = new Token();
-    Token asignado = new Token();
+    String identificador = null;
+    String asignado = null;
  }{
     try{
 
@@ -286,23 +286,23 @@ void sentenciaAsignacion():{
                         //EXISTENCIA DE IDENTIFICADORES
                         // Sino existe el id, lo guardamos en nuestra arreglo de errores
                         //System.out.println("Token:" + token);
-                         if(!TablaIdentificadores.checkExistenciaId(token)){
+                         if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                        token.beginLine + " column:" + token.beginColumn);
                          }else{
-                            identificador = token;
+                            identificador = token.image;
 
                          }
         }
         asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
 
                         //CAMBIAR FORMA DE EVALUAR ESTO
-                        if(asignado.kind !=0 && identificador.kind !=0){ //Con esta sentencia comprobamos que el elemento asignado no sea null
+                        if(asignado == null && identificador ==null){ //Con esta sentencia comprobamos que el elemento asignado no sea null
                             //Si existe el identificador comprobamos su tipo
                                 if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
 
-                                    tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
-                                            TablaIdentificadores.obtenerTipo(identificador) + " type");
+                                    tabla.add("The token: " + asignado + " doesn't correspond to the " +
+                                            TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
                                 }
 
                         }
@@ -339,37 +339,37 @@ void sentenciaDeclaracionVariables():{}{
 
 
 //CAMBIAMOS el tipo de dato retornado a token
-Token constantes():{ }{
-    <NUMERO_ENTERO> {return token;}
-    | <NUMERO_DECIMAL>  {return token;}
-    | <CADENA_TEXTO> {return token;}
-    | <CARACTER_TEXTO> {return token;}
-    | <BOOLEANO_FALSO> {return token;}
-    | <BOOLEANO_VERDADERO> {return token;}
+String constantes():{ }{
+    <NUMERO_ENTERO> {return token.image;}
+    | <NUMERO_DECIMAL>  {return token.image;}
+    | <CADENA_TEXTO> {return token.image;}
+    | <CARACTER_TEXTO> {return token.image;}
+    | <BOOLEANO_FALSO> {return token.image;}
+    | <BOOLEANO_VERDADERO> {return token.image;}
 }
 
 //ASIGNACION CORRECTA DE VALORES
-Token asignacion():{Token asignado = new Token();}{
+String asignacion():{String asignado = "";}{
     ( <ASIGNACION> | <ASIGNACION_COMPUESTA> ) asignado=condicion() {return asignado;}
 }
 
-Token condicion():{Token asignado = new Token();} {
+String condicion():{String asignado = "";} {
     asignado=operacion() {return asignado;}
     ( operadoresRelacionales() operacion() )*
 }
 
 
-Token operacion():{
-    Token t = new Token();
+String operacion():{
+    String t = "";
  }{
     ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
 
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                                    if(!TablaIdentificadores.checkExistenciaId(token)){
+                                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                         tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                                     token.beginLine + " column:" + token.beginColumn);
                                     }else{
-                                        t=token;
+                                        t=token.image;
                                     }
 
 }
@@ -378,11 +378,11 @@ Token operacion():{
 
     (operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                                                        if(!TablaIdentificadores.checkExistenciaId(token)){
+                                                        if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
                                                             token.beginLine + " column:" + token.beginColumn);
                                                         }else{
-                                                            t=token;
+                                                            t=token.image;
                                                         }
 }
     | t=constantes()| operacionParentesis() ))*
@@ -411,8 +411,8 @@ void operadoresLogicos():{}{
 
 //DECLARACION DE VARIABLES:COMPROBACION DE TIPOS
 void declaracionVariables():{
-    Token identificador = new Token();
-    Token asignado = new Token();
+    String identificador = "";
+    String asignado = "";
     String tipoDato = "";
  }{
 
@@ -421,21 +421,21 @@ void declaracionVariables():{
     <DEFINIR>
     tipoDato=tiposDato()
     <VARIABLE> {
-                        if(TablaIdentificadores.checkExistenciaId(token)){
+                        if(TablaIdentificadores.checkExistenciaId(token.image)){
 
                             tabla.add("The identifier: " + token.image + " already exist, at line: " + token.beginLine + " column:" + token.endColumn);
                         }else{
-                            TablaIdentificadores.insertarIdentificadores(token,tipoDato);
-                            identificador = token;
+                            TablaIdentificadores.insertarIdentificadores(token.image,tipoDato);
+                            identificador = token.image;
                         }
                     }
 
     (asignado=asignacion())? { //Se evalua si se esta asignando el tipo correcto al identificador
-                    if(asignado.kind != 0){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
-
+                    if(!asignado.equals("")){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
+                        System.out.println("asignado =" + asignado);
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                      tabla.add("The token: " + asignado.image + " doesn't correspond to the " +
-                                        TablaIdentificadores.obtenerTipo(identificador) + " type");
+                                      tabla.add("The token: " + asignado + " doesn't correspond to the " +
+                                        TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
                                   }
                           }
     }
