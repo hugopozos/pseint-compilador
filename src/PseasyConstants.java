@@ -21,117 +21,111 @@ public interface PseasyConstants {
   /** RegularExpression Id. */
   int CADENA = 5;
   /** RegularExpression Id. */
-  int CARACTER = 6;
+  int BOOLEANO = 6;
   /** RegularExpression Id. */
-  int BOOLEANO = 7;
+  int LETRA = 7;
   /** RegularExpression Id. */
-  int LETRA = 8;
+  int NUMERO = 8;
   /** RegularExpression Id. */
-  int NUMERO = 9;
+  int CADENA_TEXTO = 9;
   /** RegularExpression Id. */
-  int CADENA_TEXTO = 10;
+  int NUMERO_ENTERO = 10;
   /** RegularExpression Id. */
-  int CARACTER_TEXTO = 11;
+  int NUMERO_DECIMAL = 11;
   /** RegularExpression Id. */
-  int NUMERO_ENTERO = 12;
+  int BOOLEANO_FALSO = 12;
   /** RegularExpression Id. */
-  int NUMERO_DECIMAL = 13;
+  int BOOLEANO_VERDADERO = 13;
   /** RegularExpression Id. */
-  int BOOLEANO_FALSO = 14;
+  int DELIMITADOR = 14;
   /** RegularExpression Id. */
-  int BOOLEANO_VERDADERO = 15;
+  int COMA = 15;
   /** RegularExpression Id. */
-  int DELIMITADOR = 16;
+  int LEER = 16;
   /** RegularExpression Id. */
-  int COMA = 17;
+  int ESCRIBIR = 17;
   /** RegularExpression Id. */
-  int LEER = 18;
+  int DEFINIR = 18;
   /** RegularExpression Id. */
-  int ESCRIBIR = 19;
+  int ASIGNACION = 19;
   /** RegularExpression Id. */
-  int DEFINIR = 20;
+  int SUMA = 20;
   /** RegularExpression Id. */
-  int ASIGNACION = 21;
+  int RESTA = 21;
   /** RegularExpression Id. */
-  int SUMA = 22;
+  int MULTIPLICACION = 22;
   /** RegularExpression Id. */
-  int RESTA = 23;
+  int DIVISION = 23;
   /** RegularExpression Id. */
-  int MULTIPLICACION = 24;
+  int MODULO = 24;
   /** RegularExpression Id. */
-  int DIVISION = 25;
+  int LOGICO_AND = 25;
   /** RegularExpression Id. */
-  int MODULO = 26;
+  int LOGICO_OR = 26;
   /** RegularExpression Id. */
-  int LOGICO_AND = 27;
+  int LOGICO_NOT = 27;
   /** RegularExpression Id. */
-  int LOGICO_OR = 28;
+  int OPERADOR_IGUAL = 28;
   /** RegularExpression Id. */
-  int LOGICO_NOT = 29;
+  int OPERADOR_DIFERENTE = 29;
   /** RegularExpression Id. */
-  int ASIGNACION_COMPUESTA = 30;
+  int OPERADOR_MAYOR = 30;
   /** RegularExpression Id. */
-  int OPERADOR_IGUAL = 31;
+  int OPERADOR_MENOR = 31;
   /** RegularExpression Id. */
-  int OPERADOR_DIFERENTE = 32;
+  int OPERADOR_MAYOR_IGUAL = 32;
   /** RegularExpression Id. */
-  int OPERADOR_MAYOR = 33;
+  int OPERADOR_MENOR_IGUAL = 33;
   /** RegularExpression Id. */
-  int OPERADOR_MENOR = 34;
+  int OPERADOR_DOS_PUNTOS = 34;
   /** RegularExpression Id. */
-  int OPERADOR_MAYOR_IGUAL = 35;
+  int PAREN_ABIERTO = 35;
   /** RegularExpression Id. */
-  int OPERADOR_MENOR_IGUAL = 36;
+  int PAREN_CERRADO = 36;
   /** RegularExpression Id. */
-  int OPERADOR_DOS_PUNTOS = 37;
+  int INICIO_CICLO_PARA = 37;
   /** RegularExpression Id. */
-  int PAREN_ABIERTO = 38;
+  int CONDICION_CICLO_PARA = 38;
   /** RegularExpression Id. */
-  int PAREN_CERRADO = 39;
+  int INCREMENTO_CICLO_PARA = 39;
   /** RegularExpression Id. */
-  int INICIO_CICLO_PARA = 40;
+  int DECREMENTO_CICLO_PARA = 40;
   /** RegularExpression Id. */
-  int CONDICION_CICLO_PARA = 41;
+  int FIN_CICLO_PARA = 41;
   /** RegularExpression Id. */
-  int INCREMENTO_CICLO_PARA = 42;
+  int INICIO_CICLO_MIENTRAS = 42;
   /** RegularExpression Id. */
-  int DECREMENTO_CICLO_PARA = 43;
+  int FIN_CICLO_MIENTRAS = 43;
   /** RegularExpression Id. */
-  int FIN_CICLO_PARA = 44;
+  int INICIO_CICLO_REPETIR = 44;
   /** RegularExpression Id. */
-  int INICIO_CICLO_MIENTRAS = 45;
+  int CONDICION_CICLO_REPETIR = 45;
   /** RegularExpression Id. */
-  int FIN_CICLO_MIENTRAS = 46;
+  int INICIO_CONDICIONAL_SI = 46;
   /** RegularExpression Id. */
-  int INICIO_CICLO_REPETIR = 47;
+  int ENTONCES = 47;
   /** RegularExpression Id. */
-  int CONDICION_CICLO_REPETIR = 48;
+  int CONDICIONAL_SINO = 48;
   /** RegularExpression Id. */
-  int INICIO_CONDICIONAL_SI = 49;
+  int FIN_CONDICIONAL_SI = 49;
   /** RegularExpression Id. */
-  int ENTONCES = 50;
+  int INICIO_CONDICIONAL_SEGUN = 50;
   /** RegularExpression Id. */
-  int CONDICIONAL_SINO = 51;
+  int CASO = 51;
   /** RegularExpression Id. */
-  int FIN_CONDICIONAL_SI = 52;
+  int CASO_PREDETERMINADO = 52;
   /** RegularExpression Id. */
-  int INICIO_CONDICIONAL_SEGUN = 53;
+  int FIN_SEGUN = 53;
   /** RegularExpression Id. */
-  int CASO = 54;
+  int HACER = 54;
   /** RegularExpression Id. */
-  int CASO_PREDETERMINADO = 55;
+  int VARIABLE = 55;
   /** RegularExpression Id. */
-  int FIN_SEGUN = 56;
+  int COMENTARIO = 60;
   /** RegularExpression Id. */
-  int HACER = 57;
+  int ID_INVALIDO = 61;
   /** RegularExpression Id. */
-  int VARIABLE = 58;
-  /** RegularExpression Id. */
-  int COMENTARIO = 63;
-  /** RegularExpression Id. */
-  int ID_INVALIDO = 64;
-  /** RegularExpression Id. */
-  int INVALIDO = 65;
+  int INVALIDO = 62;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -144,12 +138,10 @@ public interface PseasyConstants {
     "\"entero\"",
     "\"flotante\"",
     "\"cadena\"",
-    "\"caracter\"",
     "\"booleano\"",
     "<LETRA>",
     "<NUMERO>",
     "<CADENA_TEXTO>",
-    "<CARACTER_TEXTO>",
     "<NUMERO_ENTERO>",
     "<NUMERO_DECIMAL>",
     "\"Falso\"",
@@ -168,7 +160,6 @@ public interface PseasyConstants {
     "\"&&\"",
     "\"||\"",
     "\"!\"",
-    "<ASIGNACION_COMPUESTA>",
     "\"==\"",
     "\"!=\"",
     "\">\"",

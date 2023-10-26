@@ -83,16 +83,16 @@ public class TablaIdentificadores {
         int kind =0;
         //Utilizar expresiones regulares
         if(t.matches("\\d+")){
-            System.out.println("Es un entero");
+            //System.out.println("Es un entero");
             kind = 3;
         }else if(t.matches("falso") || t.matches("verdadero")){
-            System.out.println("Es un booleano");
+            //System.out.println("Es un booleano");
             kind = 7;
         }else if(t.matches("\\d+[.]\\d+")){
-            System.out.println("Es un flotante");
+            //System.out.println("Es un flotante");
             kind = 4;
         }else{
-            System.out.println("Es una cadena");
+            //System.out.println("Es una cadena");
             kind = 5;
         }
 

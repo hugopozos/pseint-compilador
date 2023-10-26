@@ -1,4 +1,4 @@
 Algoritmo
     Definir entero res;
-    res = n2;
+    res = 10;
 FinAlgoritmo

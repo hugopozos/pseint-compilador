@@ -13,6 +13,7 @@ public class Pseasy implements PseasyConstants {
 
         //Variables para generacion de codigo intermedio
         private static int tmpContador = 0;
+        static String tmpUltimaUtilizada = "";
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -36,8 +37,16 @@ public class Pseasy implements PseasyConstants {
 
           //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
           private static void asignacion(String id, String exp){
-            String tmp = id +" = " + exp + "\n";
+            String tmp = id +" := " + exp + "\n";
             codigoIntermedio.add(tmp);
+          }
+
+          private static void operacionAritmetica(String op,String ex1, String ex2){
+                tmpContador++;
+                String aux = "tmp" + tmpContador;
+                String cI = aux + "=" + ex1 + op + ex2;
+                tmpUltimaUtilizada = aux;
+                codigoIntermedio.add(cI);
           }
 
 // Gramaticas
@@ -67,7 +76,7 @@ public class Pseasy implements PseasyConstants {
         sentencias();
       }
       jj_consume_token(FIN);
-                TablaIdentificadores.mostrarTabla();
+
     } catch (ParseException e) {
             Token t;
             do{
@@ -136,13 +145,18 @@ public class Pseasy implements PseasyConstants {
       asignado = asignacion();
                                 //Se evalua si se esta asignando el tipo correcto al identificador
 
-                        //CAMBIAR FORMA DE EVALUAR ESTO
-                        if(asignado == null && identificador ==null){ //Con esta sentencia comprobamos que el elemento asignado no sea null
-                            //Si existe el identificador comprobamos su tipo
+                        //--- PARTE SEMANTICA: COMPROBACION DE TIPOS
+                        if(asignado != null && identificador !=null){
+                                  //Si asignado e identificador tienen un valor asignado, se comprueban que sean del mismo tipo
                                 if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
 
                                     tabla.add("The token: " + asignado + " doesn't correspond to the " +
                                             TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
+
+                                // ----- GENERACION CODIGO INTERMEDIO
+                                //Si esta bien semanticamente, lo pasamos a codigo intermedio
+                                }else{
+                                    asignacion(identificador,asignado);
                                 }
 
                         }
@@ -188,10 +202,6 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(CADENA_TEXTO);
                       {if (true) return token.image;}
       break;
-    case CARACTER_TEXTO:
-      jj_consume_token(CARACTER_TEXTO);
-                        {if (true) return token.image;}
-      break;
     case BOOLEANO_FALSO:
       jj_consume_token(BOOLEANO_FALSO);
                         {if (true) return token.image;}
@@ -211,20 +221,9 @@ public class Pseasy implements PseasyConstants {
 //ASIGNACION CORRECTA DE VALORES
   final public String asignacion() throws ParseException {
                      String asignado = "";
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case ASIGNACION:
-      jj_consume_token(ASIGNACION);
-      break;
-    case ASIGNACION_COMPUESTA:
-      jj_consume_token(ASIGNACION_COMPUESTA);
-      break;
-    default:
-      jj_la1[3] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
+    jj_consume_token(ASIGNACION);
     asignado = condicion();
-                                                                    {if (true) return asignado;}
+                                        {if (true) return asignado;}
     throw new Error("Missing return statement in function");
   }
 
@@ -244,7 +243,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[4] = jj_gen;
+        jj_la1[3] = jj_gen;
         break label_2;
       }
       operadoresRelacionales();
@@ -262,7 +261,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[5] = jj_gen;
+        jj_la1[4] = jj_gen;
         break label_3;
       }
       jj_consume_token(LOGICO_NOT);
@@ -281,7 +280,6 @@ public class Pseasy implements PseasyConstants {
                                     }
       break;
     case CADENA_TEXTO:
-    case CARACTER_TEXTO:
     case NUMERO_ENTERO:
     case NUMERO_DECIMAL:
     case BOOLEANO_FALSO:
@@ -292,7 +290,7 @@ public class Pseasy implements PseasyConstants {
       operacionParentesis();
       break;
     default:
-      jj_la1[6] = jj_gen;
+      jj_la1[5] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -315,7 +313,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[7] = jj_gen;
+        jj_la1[6] = jj_gen;
         break label_4;
       }
       operadores();
@@ -326,7 +324,7 @@ public class Pseasy implements PseasyConstants {
           ;
           break;
         default:
-          jj_la1[8] = jj_gen;
+          jj_la1[7] = jj_gen;
           break label_5;
         }
         jj_consume_token(LOGICO_NOT);
@@ -344,7 +342,6 @@ public class Pseasy implements PseasyConstants {
                                                         }
         break;
       case CADENA_TEXTO:
-      case CARACTER_TEXTO:
       case NUMERO_ENTERO:
       case NUMERO_DECIMAL:
       case BOOLEANO_FALSO:
@@ -355,7 +352,7 @@ public class Pseasy implements PseasyConstants {
         operacionParentesis();
         break;
       default:
-        jj_la1[9] = jj_gen;
+        jj_la1[8] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -392,7 +389,7 @@ public class Pseasy implements PseasyConstants {
       operadoresRelacionales();
       break;
     default:
-      jj_la1[10] = jj_gen;
+      jj_la1[9] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -416,7 +413,7 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(MODULO);
       break;
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[10] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -443,7 +440,7 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(OPERADOR_MENOR_IGUAL);
       break;
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[11] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -458,7 +455,7 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(LOGICO_OR);
       break;
     default:
-      jj_la1[13] = jj_gen;
+      jj_la1[12] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -481,11 +478,10 @@ public class Pseasy implements PseasyConstants {
                         }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case ASIGNACION:
-    case ASIGNACION_COMPUESTA:
       asignado = asignacion();
       break;
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[13] = jj_gen;
       ;
     }
                                //Se evalua si se esta asignando el tipo correcto al identificador
@@ -512,16 +508,12 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(CADENA);
                 {if (true) return token.image;}
       break;
-    case CARACTER:
-      jj_consume_token(CARACTER);
-                 {if (true) return token.image;}
-      break;
     case BOOLEANO:
       jj_consume_token(BOOLEANO);
                   {if (true) return token.image;}
       break;
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[14] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -562,7 +554,7 @@ public class Pseasy implements PseasyConstants {
           jj_consume_token(DELIMITADOR);
           break;
         default:
-          jj_la1[16] = jj_gen;
+          jj_la1[15] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -597,7 +589,7 @@ public class Pseasy implements PseasyConstants {
           ;
           break;
         default:
-          jj_la1[17] = jj_gen;
+          jj_la1[16] = jj_gen;
           break label_6;
         }
       }
@@ -620,13 +612,13 @@ public class Pseasy implements PseasyConstants {
             ;
             break;
           default:
-            jj_la1[18] = jj_gen;
+            jj_la1[17] = jj_gen;
             break label_7;
           }
         }
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[18] = jj_gen;
         ;
       }
       jj_consume_token(FIN_CONDICIONAL_SI);
@@ -664,7 +656,7 @@ public class Pseasy implements PseasyConstants {
           ;
           break;
         default:
-          jj_la1[20] = jj_gen;
+          jj_la1[19] = jj_gen;
           break label_9;
         }
       }
@@ -673,7 +665,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[21] = jj_gen;
+        jj_la1[20] = jj_gen;
         break label_8;
       }
     }
@@ -697,13 +689,13 @@ public class Pseasy implements PseasyConstants {
           ;
           break;
         default:
-          jj_la1[22] = jj_gen;
+          jj_la1[21] = jj_gen;
           break label_10;
         }
       }
       break;
     default:
-      jj_la1[23] = jj_gen;
+      jj_la1[22] = jj_gen;
       ;
     }
     jj_consume_token(FIN_SEGUN);
@@ -716,7 +708,6 @@ public class Pseasy implements PseasyConstants {
     jj_consume_token(ASIGNACION);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case CADENA_TEXTO:
-    case CARACTER_TEXTO:
     case NUMERO_ENTERO:
     case NUMERO_DECIMAL:
     case BOOLEANO_FALSO:
@@ -727,7 +718,7 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(VARIABLE);
       break;
     default:
-      jj_la1[24] = jj_gen;
+      jj_la1[23] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -741,7 +732,7 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(DECREMENTO_CICLO_PARA);
       break;
     default:
-      jj_la1[25] = jj_gen;
+      jj_la1[24] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -753,7 +744,7 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(NUMERO_DECIMAL);
       break;
     default:
-      jj_la1[26] = jj_gen;
+      jj_la1[25] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -773,7 +764,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[27] = jj_gen;
+        jj_la1[26] = jj_gen;
         break label_11;
       }
     }
@@ -799,7 +790,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[27] = jj_gen;
         break label_12;
       }
     }
@@ -829,7 +820,7 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[29] = jj_gen;
+        jj_la1[28] = jj_gen;
         break label_13;
       }
     }
@@ -878,23 +869,18 @@ public class Pseasy implements PseasyConstants {
   private boolean jj_lookingAhead = false;
   private boolean jj_semLA;
   private int jj_gen;
-  final private int[] jj_la1 = new int[30];
+  final private int[] jj_la1 = new int[29];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
-  static private int[] jj_la1_2;
   static {
       jj_la1_init_0();
       jj_la1_init_1();
-      jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x1c0000,0x1c0000,0xfc00,0x40200000,0x80000000,0x20000000,0xfc00,0x9fc00000,0x20000000,0xfc00,0x9fc00000,0x7c00000,0x80000000,0x18000000,0x40200000,0xf8,0x80000,0x1c0000,0x1c0000,0x0,0x1c0000,0x0,0x1c0000,0x0,0xfc00,0x0,0x3000,0x1c0000,0x1c0000,0x1c0000,};
+      jj_la1_0 = new int[] {0x70000,0x70000,0x3e00,0xf0000000,0x8000000,0x3e00,0xf7f00000,0x8000000,0x3e00,0xf7f00000,0x1f00000,0xf0000000,0x6000000,0x80000,0x78,0x20000,0x70000,0x70000,0x0,0x70000,0x0,0x70000,0x0,0x3e00,0x0,0xc00,0x70000,0x70000,0x70000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x422a100,0x422a100,0x0,0x0,0x1f,0x0,0x4000040,0x1f,0x0,0x4000040,0x1f,0x0,0x1f,0x0,0x0,0x0,0x0,0x422a100,0x422a100,0x80000,0x422a100,0x400000,0x422a100,0x800000,0x4000000,0xc00,0x0,0x422a100,0x422a100,0x422a100,};
-   }
-   private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x845420,0x845420,0x0,0x3,0x0,0x800008,0x3,0x0,0x800008,0x3,0x0,0x3,0x0,0x0,0x0,0x0,0x845420,0x845420,0x10000,0x845420,0x80000,0x845420,0x100000,0x800000,0x180,0x0,0x845420,0x845420,0x845420,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[2];
   private boolean jj_rescan = false;
@@ -911,7 +897,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -926,7 +912,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -937,7 +923,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -948,7 +934,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -958,7 +944,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -968,7 +954,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1083,12 +1069,12 @@ public class Pseasy implements PseasyConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[66];
+    boolean[] la1tokens = new boolean[63];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 29; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1097,13 +1083,10 @@ public class Pseasy implements PseasyConstants {
           if ((jj_la1_1[i] & (1<<j)) != 0) {
             la1tokens[32+j] = true;
           }
-          if ((jj_la1_2[i] & (1<<j)) != 0) {
-            la1tokens[64+j] = true;
-          }
         }
       }
     }
-    for (int i = 0; i < 66; i++) {
+    for (int i = 0; i < 63; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

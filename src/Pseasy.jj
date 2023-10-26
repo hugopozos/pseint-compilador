@@ -20,6 +20,7 @@ public class Pseasy {
 
         //Variables para generacion de codigo intermedio
         private static int tmpContador = 0;
+        static String tmpUltimaUtilizada = "";
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -43,8 +44,16 @@ public class Pseasy {
 
           //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
           private static void asignacion(String id, String exp){
-            String tmp = id +" = " + exp + "\n";
+            String tmp = id +" := " + exp + "\n";
             codigoIntermedio.add(tmp);
+          }
+
+          private static void operacionAritmetica(String op,String ex1, String ex2){
+                tmpContador++;
+                String aux = "tmp" + tmpContador;
+                String cI = aux + "=" + ex1 + op + ex2;
+                tmpUltimaUtilizada = aux;
+                codigoIntermedio.add(cI);
           }
         }
 
@@ -92,8 +101,6 @@ TOKEN : {
     |
     <CADENA:"cadena">
     |
-    <CARACTER:"caracter">
-    |
     <BOOLEANO:"booleano">
 }
 
@@ -105,8 +112,6 @@ TOKEN : {
     <#NUMERO: ["0" - "9"]>
     |
     <CADENA_TEXTO: "\"" ( ~["\""] )* "\"">
-    |
-    <CARACTER_TEXTO: "'"( ~["'"] | "" )"'">
     |
     <NUMERO_ENTERO:("-" | "" | "+")(<NUMERO>)+>
     |
@@ -150,8 +155,6 @@ TOKEN : {
     <LOGICO_OR: "||">
     |
     <LOGICO_NOT: "!">
-    |
-    <ASIGNACION_COMPUESTA: (<SUMA>|<RESTA>|<MULTIPLICACION>|<DIVISION>|<MODULO>|<LOGICO_AND>|<LOGICO_OR>)<ASIGNACION>>
     |
     <OPERADOR_IGUAL: "==">
     |
@@ -243,7 +246,7 @@ void programa(): { }{
        try{
           <INICIO>
           ( sentencias() )*
-          <FIN>{TablaIdentificadores.mostrarTabla();
+          <FIN>{//TablaIdentificadores.mostrarTabla();
        }
        }catch(ParseException e){
             Token t;
@@ -296,13 +299,18 @@ void sentenciaAsignacion():{
         }
         asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
 
-                        //CAMBIAR FORMA DE EVALUAR ESTO
-                        if(asignado == null && identificador ==null){ //Con esta sentencia comprobamos que el elemento asignado no sea null
-                            //Si existe el identificador comprobamos su tipo
+                        //--- PARTE SEMANTICA: COMPROBACION DE TIPOS
+                        if(asignado != null && identificador !=null){
+                                  //Si asignado e identificador tienen un valor asignado, se comprueban que sean del mismo tipo
                                 if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
 
                                     tabla.add("The token: " + asignado + " doesn't correspond to the " +
                                             TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
+
+                                // ----- GENERACION CODIGO INTERMEDIO
+                                //Si esta bien semanticamente, lo pasamos a codigo intermedio
+                                }else{
+                                    asignacion(identificador,asignado);
                                 }
 
                         }
@@ -343,14 +351,13 @@ String constantes():{ }{
     <NUMERO_ENTERO> {return token.image;}
     | <NUMERO_DECIMAL>  {return token.image;}
     | <CADENA_TEXTO> {return token.image;}
-    | <CARACTER_TEXTO> {return token.image;}
     | <BOOLEANO_FALSO> {return token.image;}
     | <BOOLEANO_VERDADERO> {return token.image;}
 }
 
 //ASIGNACION CORRECTA DE VALORES
 String asignacion():{String asignado = "";}{
-    ( <ASIGNACION> | <ASIGNACION_COMPUESTA> ) asignado=condicion() {return asignado;}
+     <ASIGNACION> asignado=condicion() {return asignado;}
 }
 
 String condicion():{String asignado = "";} {
@@ -446,7 +453,6 @@ String tiposDato():{ }{
     <ENTERO> {return token.image;}
     | <FLOTANTE> {return token.image;}
     | <CADENA> {return token.image;}
-    |<CARACTER> {return token.image;}
     | <BOOLEANO> {return token.image;}
 }
 
@@ -529,4 +535,9 @@ void sentenciaMientras():{}{
     ( sentencias() )+
     <FIN_CICLO_MIENTRAS>
 }
-
+/*
+* ELEMENTOS QUE ELIMINE
+* EL TIPO DE DATO CARACTER
+* LA ASIGNACION COMPUESTA 
+*
+* */
