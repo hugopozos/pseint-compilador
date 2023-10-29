@@ -37,6 +37,12 @@ public class Pseasy implements PseasyConstants {
                     System.out.println("\ncompilation generated with success");
                     ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio);
 
+                    //Arrojamos linea por linea el codigo intermedio
+                       for(String c:codigoIntermedio){
+                           System.out.println(c);
+                       }
+
+
                 }
               }catch(Exception e){
                 System.out.println(e.getMessage());
@@ -74,10 +80,15 @@ public class Pseasy implements PseasyConstants {
                 return null;
           }
 
-          //Obtiene el tamaño de la lista de variables temporales
+          //Eliminar lista de temporales
+          private static void limpiarTemporales(){
+            if(listaTemporales.size() > 0){
+                listaTemporales.clear();
+            }
+          }
 
           private static void generarOperacionAsignacion(String id, String exp){
-            String tmp = id +" := " + exp + "\n";
+            String tmp = id +" = " + exp + "\n";
             codigoIntermedio.add(tmp);
           }
 
@@ -111,6 +122,16 @@ public class Pseasy implements PseasyConstants {
             String aux = bloque.etqVerdad;
             bloque.etqVerdad = bloque.etqFalso;
             bloque.etqFalso = aux;
+          }
+
+          // METODOS PARA LA OPTIMIZACION DE CODIGO INTERMEDIO
+          private static void reduccionPotencias(ArrayList<String>codigoIntermedio){
+                 //Recorrer el arrelgo
+                 int index=0;
+                 for(String codigo:codigoIntermedio){
+                      //Buscar la sentencia que tenga un "*"
+                       System.out.println(codigo);
+                 }
           }
 
 // Gramaticas
@@ -217,9 +238,10 @@ public class Pseasy implements PseasyConstants {
                                 //Si esta bien semanticamente, lo pasamos a codigo intermedio
                                 }else{
                                     // variable = tmp# -> se asigna la variable al ultimo tmp generado
-                                    asignado = obtenerUltimoTmp();
-                                     generarOperacionAsignacion(identificador,asignado);
 
+                                    asignado = (obtenerUltimoTmp() == null) ? asignado : obtenerUltimoTmp();
+                                     generarOperacionAsignacion(identificador,asignado);
+                                    limpiarTemporales();
 
 
                                 }
@@ -394,7 +416,7 @@ String operacion():{
                         //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
                         //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
 
-                        if(pila.size() > 0 && pila.getLast().equals("+")){
+                        if(pila.size() > 0 && (pila.getLast().equals("+") || pila.getLast().equals("-"))  ){
                             //Se comprueba que no se haya generado antes una variable temporal
                             //Si es asi, el utiliza la ultima variable temporal generada
                             aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
@@ -421,7 +443,7 @@ String operacion():{
                             //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
                             //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
 
-                                if(pila.size() > 0 && pila.getLast().equals("-")){
+                                if(pila.size() > 0 && (pila.getLast().equals("-") ||pila.getLast().equals("+"))){
                                     //Se comprueba que no se haya generado antes una variable temporal
                                     //Si es asi, el utiliza la ultima variable temporal generada
                                     aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
@@ -474,7 +496,7 @@ String operacion():{
                             //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
                             //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
 
-                                if(pila.size() > 0 && pila.getLast().equals("*")){
+                                if(pila.size() > 0 && (pila.getLast().equals("*") || pila.getLast().equals("/")) ){
                                     //Se comprueba que no se haya generado antes una variable temporal
                                     //Si es asi, el utiliza la ultima variable temporal generada
                                     aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
@@ -501,7 +523,7 @@ String operacion():{
                                 //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
                                 //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
 
-                                if(pila.size() > 0 && pila.getLast().equals("/")){
+                                if(pila.size() > 0 && (pila.getLast().equals("/") || pila.getLast().equals("*") ) ){
                                     //Se comprueba que no se haya generado antes una variable temporal
                                     //Si es asi, el utiliza la ultima variable temporal generada
                                     aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
@@ -1487,5 +1509,24 @@ class ArchivoCodigoIntermedio {
         }catch(FileNotFoundException ex){
             System.out.println("No se encontro el archivo");
         }
+    }
+}
+
+// ------------------------ OPTIMIZACION CODIGO INTERMEDIO -----------------------------
+
+//CLASE PARA GENERAR EL ARCHIVO OPTIMIZADO DE CODIGO INTERMEDIO
+class ArchivoOptimizado{
+    public static void escribirArchivo(ArrayList<String>codigoOptimizado){
+        String fileName = "codigoIntermedio\\codigo_optimizado.txt";
+                File archivo = new File(fileName);
+                try{
+                    PrintWriter salida = new PrintWriter(archivo);
+                    for(String e:codigoOptimizado){
+                        salida.print(e);
+                    }
+                    salida.close();
+                }catch(FileNotFoundException ex){
+                    System.out.println("No se encontro el archivo");
+                }
     }
 }

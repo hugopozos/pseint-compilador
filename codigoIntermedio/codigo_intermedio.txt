@@ -1,9 +1,8 @@
 entero x
-label etq1
-x := 0
-	if x<10 goto etq2
-	goto etq3
-label etq2
-	Escribir x
-	x inc 1	goto etq1
-label etq3
+entero y
+x = 10
+tmp1=1+x
+y = tmp1
+x = 20
+tmp2=2+x
+y = tmp2
