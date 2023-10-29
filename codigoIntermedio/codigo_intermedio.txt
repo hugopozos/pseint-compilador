@@ -1,9 +1,4 @@
 entero x
-label etq1
-x := 0
-	if x<10 goto etq2
-	goto etq3
-label etq2
-	Escribir x
-	x inc 1	goto etq1
-label etq3
+tmp1=10*5
+tmp2=tmp1/6
+x = tmp2

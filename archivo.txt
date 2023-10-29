@@ -1,4 +1,6 @@
 Algoritmo
     definir entero x;
-    #x = 10 + 7 * 5;
+    #definir entero y;
+    x = 10 * 5 / 6;
+    #y = 1 + x;
 FinAlgoritmo
