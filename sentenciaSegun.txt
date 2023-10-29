@@ -1,11 +1,11 @@
 Algoritmo
 
+   definir entero x;
+
     Segun x Hacer
         Caso 1:
             Escribir "Hola";
         Caso 2:
             Escribir "Adios";
-        En otro caso:
-            Escribir "Hasta luego";
     FinSegun
 FinAlgoritmo

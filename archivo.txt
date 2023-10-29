@@ -1,4 +1,4 @@
 Algoritmo
-    definir entero n1;
-    n1=1;
+    definir entero x;
+    #x = 10 + 7 * 5;
 FinAlgoritmo

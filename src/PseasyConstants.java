@@ -57,75 +57,73 @@ public interface PseasyConstants {
   /** RegularExpression Id. */
   int DIVISION = 23;
   /** RegularExpression Id. */
-  int MODULO = 24;
+  int LOGICO_AND = 24;
   /** RegularExpression Id. */
-  int LOGICO_AND = 25;
+  int LOGICO_OR = 25;
   /** RegularExpression Id. */
-  int LOGICO_OR = 26;
+  int LOGICO_NOT = 26;
   /** RegularExpression Id. */
-  int LOGICO_NOT = 27;
+  int OPERADOR_IGUAL = 27;
   /** RegularExpression Id. */
-  int OPERADOR_IGUAL = 28;
+  int OPERADOR_DIFERENTE = 28;
   /** RegularExpression Id. */
-  int OPERADOR_DIFERENTE = 29;
+  int OPERADOR_MAYOR = 29;
   /** RegularExpression Id. */
-  int OPERADOR_MAYOR = 30;
+  int OPERADOR_MENOR = 30;
   /** RegularExpression Id. */
-  int OPERADOR_MENOR = 31;
+  int OPERADOR_MAYOR_IGUAL = 31;
   /** RegularExpression Id. */
-  int OPERADOR_MAYOR_IGUAL = 32;
+  int OPERADOR_MENOR_IGUAL = 32;
   /** RegularExpression Id. */
-  int OPERADOR_MENOR_IGUAL = 33;
+  int OPERADOR_DOS_PUNTOS = 33;
   /** RegularExpression Id. */
-  int OPERADOR_DOS_PUNTOS = 34;
+  int PAREN_ABIERTO = 34;
   /** RegularExpression Id. */
-  int PAREN_ABIERTO = 35;
+  int PAREN_CERRADO = 35;
   /** RegularExpression Id. */
-  int PAREN_CERRADO = 36;
+  int INICIO_CICLO_PARA = 36;
   /** RegularExpression Id. */
-  int INICIO_CICLO_PARA = 37;
+  int CONDICION_CICLO_PARA = 37;
   /** RegularExpression Id. */
-  int CONDICION_CICLO_PARA = 38;
+  int INCREMENTO_CICLO_PARA = 38;
   /** RegularExpression Id. */
-  int INCREMENTO_CICLO_PARA = 39;
+  int DECREMENTO_CICLO_PARA = 39;
   /** RegularExpression Id. */
-  int DECREMENTO_CICLO_PARA = 40;
+  int FIN_CICLO_PARA = 40;
   /** RegularExpression Id. */
-  int FIN_CICLO_PARA = 41;
+  int INICIO_CICLO_MIENTRAS = 41;
   /** RegularExpression Id. */
-  int INICIO_CICLO_MIENTRAS = 42;
+  int FIN_CICLO_MIENTRAS = 42;
   /** RegularExpression Id. */
-  int FIN_CICLO_MIENTRAS = 43;
+  int INICIO_CICLO_REPETIR = 43;
   /** RegularExpression Id. */
-  int INICIO_CICLO_REPETIR = 44;
+  int CONDICION_CICLO_REPETIR = 44;
   /** RegularExpression Id. */
-  int CONDICION_CICLO_REPETIR = 45;
+  int INICIO_CONDICIONAL_SI = 45;
   /** RegularExpression Id. */
-  int INICIO_CONDICIONAL_SI = 46;
+  int ENTONCES = 46;
   /** RegularExpression Id. */
-  int ENTONCES = 47;
+  int CONDICIONAL_SINO = 47;
   /** RegularExpression Id. */
-  int CONDICIONAL_SINO = 48;
+  int FIN_CONDICIONAL_SI = 48;
   /** RegularExpression Id. */
-  int FIN_CONDICIONAL_SI = 49;
+  int INICIO_CONDICIONAL_SEGUN = 49;
   /** RegularExpression Id. */
-  int INICIO_CONDICIONAL_SEGUN = 50;
+  int CASO = 50;
   /** RegularExpression Id. */
-  int CASO = 51;
+  int CASO_PREDETERMINADO = 51;
   /** RegularExpression Id. */
-  int CASO_PREDETERMINADO = 52;
+  int FIN_SEGUN = 52;
   /** RegularExpression Id. */
-  int FIN_SEGUN = 53;
+  int HACER = 53;
   /** RegularExpression Id. */
-  int HACER = 54;
+  int VARIABLE = 54;
   /** RegularExpression Id. */
-  int VARIABLE = 55;
+  int COMENTARIO = 59;
   /** RegularExpression Id. */
-  int COMENTARIO = 60;
+  int ID_INVALIDO = 60;
   /** RegularExpression Id. */
-  int ID_INVALIDO = 61;
-  /** RegularExpression Id. */
-  int INVALIDO = 62;
+  int INVALIDO = 61;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -156,7 +154,6 @@ public interface PseasyConstants {
     "\"-\"",
     "\"*\"",
     "\"/\"",
-    "\"%\"",
     "\"&&\"",
     "\"||\"",
     "\"!\"",

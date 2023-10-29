@@ -2,6 +2,8 @@
 package src;
 import java.util.ArrayList;
 import java.io.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import src.TablaIdentificadores;
 public class Pseasy implements PseasyConstants {
 
@@ -9,11 +11,17 @@ public class Pseasy implements PseasyConstants {
         static ArrayList<String> tabla = PseasyTokenManager.tabla;
 
         //Arreglo para guardar lo generado por el codigo intermedio
-        static ArrayList<String> codigoIntermedio = PseasyTokenManager.codigoIntermedio;
+        static ArrayList<String> codigoIntermedio = new ArrayList();
+
+        //Arreglo para guardar variables temporales
+        static ArrayList<String> listaTemporales = new ArrayList();
+
+        static Deque<String> pila = PseasyTokenManager.pila;
 
         //Variables para generacion de codigo intermedio
         private static int tmpContador = 0;
-        static String tmpUltimaUtilizada = "";
+        private static int etContador = 0;
+
         public static void main(String[] args) {
             try{
                 Pseasy pseasy = new Pseasy(System.in);
@@ -35,18 +43,74 @@ public class Pseasy implements PseasyConstants {
               }
           }
 
+
+
           //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
-          private static void asignacion(String id, String exp){
+          private static void agregarCodigoIntermedio(String codigo){
+            codigoIntermedio.add(codigo);
+          }
+
+          private static String generarTmp(){
+            tmpContador++;
+            String aux= "tmp" + tmpContador;
+            listaTemporales.add(aux);
+            return aux;
+          }
+          private static String generarEq(){
+            etContador++;
+            return "etq"+etContador;
+          }
+          private static class BloqueCondicion{
+            String etqVerdad,etqFalso;
+          }
+
+          //Obtiene el ultimo elemento en nuestra lista de variables temporales
+          private static String obtenerUltimoTmp(){
+            if(listaTemporales.size() > 0)
+            {
+                int indexUltimo = listaTemporales.size() -1;
+                return listaTemporales.get(indexUltimo);
+            }
+                return null;
+          }
+
+          //Obtiene el tamaño de la lista de variables temporales
+
+          private static void generarOperacionAsignacion(String id, String exp){
             String tmp = id +" := " + exp + "\n";
             codigoIntermedio.add(tmp);
           }
 
-          private static void operacionAritmetica(String op,String ex1, String ex2){
-                tmpContador++;
-                String aux = "tmp" + tmpContador;
-                String cI = aux + "=" + ex1 + op + ex2;
-                tmpUltimaUtilizada = aux;
+
+
+          private static void generarOperacionAritmetica(String op,String ex1, String ex2){
+
+                String aux = generarTmp();
+                String cI = aux + "=" + ex1 + op + ex2 + "\n";
                 codigoIntermedio.add(cI);
+          }
+
+          //METODOS PARA GENERAR EL CODIGO INTERMEDIO EN CONDICIONES
+          private static void generarLabel(String label){
+            codigoIntermedio.add("label " + label + "\n");
+          }
+          private static void generarGoto(String label){
+            codigoIntermedio.add("\tgoto " + label + "\n");
+          }
+
+          private BloqueCondicion generarOperacionRelacional(String e1, String e2, String op){
+            BloqueCondicion bloque = new BloqueCondicion();
+            bloque.etqVerdad = generarEq();
+            bloque.etqFalso = generarEq();
+            codigoIntermedio.add("\tif " +e1 +op +e2 +" goto "+bloque.etqVerdad + "\n");
+            generarGoto(bloque.etqFalso);
+            return bloque;
+          }
+
+          private static void interCondicion(BloqueCondicion bloque){
+            String aux = bloque.etqVerdad;
+            bloque.etqVerdad = bloque.etqFalso;
+            bloque.etqFalso = aux;
           }
 
 // Gramaticas
@@ -63,7 +127,6 @@ public class Pseasy implements PseasyConstants {
         case DEFINIR:
         case INICIO_CICLO_PARA:
         case INICIO_CICLO_MIENTRAS:
-        case INICIO_CICLO_REPETIR:
         case INICIO_CONDICIONAL_SI:
         case INICIO_CONDICIONAL_SEGUN:
         case VARIABLE:
@@ -112,9 +175,6 @@ public class Pseasy implements PseasyConstants {
     case INICIO_CICLO_PARA:
       sentenciaPara();
       break;
-    case INICIO_CICLO_REPETIR:
-      sentenciaRepetir();
-      break;
     case INICIO_CICLO_MIENTRAS:
       sentenciaMientras();
       break;
@@ -156,7 +216,12 @@ public class Pseasy implements PseasyConstants {
                                 // ----- GENERACION CODIGO INTERMEDIO
                                 //Si esta bien semanticamente, lo pasamos a codigo intermedio
                                 }else{
-                                    asignacion(identificador,asignado);
+                                    // variable = tmp# -> se asigna la variable al ultimo tmp generado
+                                    asignado = obtenerUltimoTmp();
+                                     generarOperacionAsignacion(identificador,asignado);
+
+
+
                                 }
 
                         }
@@ -222,54 +287,29 @@ public class Pseasy implements PseasyConstants {
   final public String asignacion() throws ParseException {
                      String asignado = "";
     jj_consume_token(ASIGNACION);
-    asignado = condicion();
-                                        {if (true) return asignado;}
+    asignado = tipoOperacion();
+                    {if (true) return asignado;}
     throw new Error("Missing return statement in function");
   }
 
-  final public String condicion() throws ParseException {
-                    String asignado = "";
-    asignado = operacion();
-                          {if (true) return asignado;}
-    label_2:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case OPERADOR_IGUAL:
-      case OPERADOR_DIFERENTE:
-      case OPERADOR_MAYOR:
-      case OPERADOR_MENOR:
-      case OPERADOR_MAYOR_IGUAL:
-      case OPERADOR_MENOR_IGUAL:
-        ;
-        break;
-      default:
-        jj_la1[3] = jj_gen;
-        break label_2;
-      }
-      operadoresRelacionales();
-      operacion();
-    }
-    throw new Error("Missing return statement in function");
-  }
+/*
+String condicion():{String asignado = "";} {
+    asignado=operacion() {return asignado;}
+    //( operadoresRelacionales() operacion() )* -> Evaluar si quiero dejar esto en mi gramatica
+}*/
 
-  final public String operacion() throws ParseException {
+
+/*
+* Separar las operaciones aritmeticas de las relaciones
+*
+* */
+/*
+String operacion():{
     String t = "";
-    label_3:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LOGICO_NOT:
-        ;
-        break;
-      default:
-        jj_la1[4] = jj_gen;
-        break label_3;
-      }
-      jj_consume_token(LOGICO_NOT);
-    }
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case VARIABLE:
-      jj_consume_token(VARIABLE);
-                                     //EXISTENCIA DE IDENTIFICADORES
+    String id = "";
+    String valor = "";
+ }{
+    ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
 
                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                     if(!TablaIdentificadores.checkExistenciaId(token.image)){
@@ -278,61 +318,16 @@ public class Pseasy implements PseasyConstants {
                                     }else{
                                         t=token.image;
                                     }
-      break;
-    case CADENA_TEXTO:
-    case NUMERO_ENTERO:
-    case NUMERO_DECIMAL:
-    case BOOLEANO_FALSO:
-    case BOOLEANO_VERDADERO:
-      t = constantes();
-      break;
-    case PAREN_ABIERTO:
-      operacionParentesis();
-      break;
-    default:
-      jj_la1[5] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-    label_4:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case SUMA:
-      case RESTA:
-      case MULTIPLICACION:
-      case DIVISION:
-      case MODULO:
-      case LOGICO_AND:
-      case LOGICO_OR:
-      case OPERADOR_IGUAL:
-      case OPERADOR_DIFERENTE:
-      case OPERADOR_MAYOR:
-      case OPERADOR_MENOR:
-      case OPERADOR_MAYOR_IGUAL:
-      case OPERADOR_MENOR_IGUAL:
-        ;
-        break;
-      default:
-        jj_la1[6] = jj_gen;
-        break label_4;
-      }
-      operadores();
-      label_5:
-      while (true) {
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case LOGICO_NOT:
-          ;
-          break;
-        default:
-          jj_la1[7] = jj_gen;
-          break label_5;
-        }
-        jj_consume_token(LOGICO_NOT);
-      }
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case VARIABLE:
-        jj_consume_token(VARIABLE);
-                                                     //EXISTENCIA DE IDENTIFICADORES
+
+}
+    | t=constantes() {  //En cualquier asignacion de constantes, se utiliza una variable temporal
+                        //tmp = 10
+                        //return tmp
+
+                         }
+    | operacionParentesis() )
+
+    (operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
                                                      // Sino existe el id, lo guardamos en nuestra arreglo de errores
                                                         if(!TablaIdentificadores.checkExistenciaId(token.image)){
                                                             tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
@@ -340,132 +335,296 @@ public class Pseasy implements PseasyConstants {
                                                         }else{
                                                             t=token.image;
                                                         }
-        break;
-      case CADENA_TEXTO:
-      case NUMERO_ENTERO:
-      case NUMERO_DECIMAL:
-      case BOOLEANO_FALSO:
-      case BOOLEANO_VERDADERO:
-        t = constantes();
-        break;
-      case PAREN_ABIERTO:
-        operacionParentesis();
+}
+    | t=constantes()| operacionParentesis() ))*
+    {return t;}
+}*/
+
+/*INICIA MODIFICACION DE FUNCIONES BNF*/
+  final public String tipoOperacion() throws ParseException {
+                         String t;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case NUMERO_ENTERO:
+    case NUMERO_DECIMAL:
+    case PAREN_ABIERTO:
+    case VARIABLE:
+      t = operacionAritmetica();
+      break;
+    case CADENA_TEXTO:
+      t = operacionConcatenacion();
+      break;
+    case BOOLEANO_FALSO:
+    case BOOLEANO_VERDADERO:
+      t = asignarBooleano();
+      break;
+    default:
+      jj_la1[3] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+     //Borramos los elementos de la pila
+          pila.clear();
+          {if (true) return t;}
+    throw new Error("Missing return statement in function");
+  }
+
+/*
+* EXPLICACION DE VARIABLES
+* e1 y e2 son variables que guardan la representacion en string del token
+* Pila es una estructura de datos que nos permite comprobar la jerarquia de operadores
+* */
+  final public String operacionAritmetica() throws ParseException {
+                              String e1=""; String e2="";String aux="";
+    e1 = nivelSegundoJerarquia();
+    label_2:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case SUMA:
+      case RESTA:
+        ;
         break;
       default:
-        jj_la1[8] = jj_gen;
+        jj_la1[4] = jj_gen;
+        break label_2;
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case SUMA:
+        jj_consume_token(SUMA);
+        e2 = nivelSegundoJerarquia();
+                        //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
+                        //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
+
+                        if(pila.size() > 0 && pila.getLast().equals("+")){
+                            //Se comprueba que no se haya generado antes una variable temporal
+                            //Si es asi, el utiliza la ultima variable temporal generada
+                            aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
+                            generarOperacionAritmetica("+",aux,e2);
+
+                            //Eliminamos el elemto final
+                            pila.pop();
+                            pila.add("+");
+                        }
+                        /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
+                        la funcion generarOperacion, de la siguiente forma
+                        */
+                        else{
+                            e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
+                            generarOperacionAritmetica("+",e1,e2);
+
+                            //Guardamos el operador en la pila
+                            pila.add("+");
+                        }
+        break;
+      case RESTA:
+        jj_consume_token(RESTA);
+        e2 = nivelSegundoJerarquia();
+                            //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
+                            //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
+
+                                if(pila.size() > 0 && pila.getLast().equals("-")){
+                                    //Se comprueba que no se haya generado antes una variable temporal
+                                    //Si es asi, el utiliza la ultima variable temporal generada
+                                    aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
+                                    generarOperacionAritmetica("-",aux,e2);
+
+                                    //Eliminamos el elemto final
+                                    pila.pop();
+                                    pila.add("-");
+                                }
+                                /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
+                                la funcion generarOperacion, de la siguiente forma
+                                */
+                                else{
+                                    e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
+                                    generarOperacionAritmetica("-",e1,e2);
+
+                                    //Guardamos el operador en la pila
+                                    pila.add("-");
+                                    }
+        break;
+      default:
+        jj_la1[5] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
     }
-     {if (true) return t;}
+                                 {if (true) return e1;}
     throw new Error("Missing return statement in function");
   }
 
-  final public void operacionParentesis() throws ParseException {
-    jj_consume_token(PAREN_ABIERTO);
-    operacion();
-    jj_consume_token(PAREN_CERRADO);
+//Funciones para la jerarquia de operadores
+  final public String nivelSegundoJerarquia() throws ParseException {
+                                String e1; String e2; String aux="";
+    e1 = terminalesNumeros();
+    label_3:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case MULTIPLICACION:
+      case DIVISION:
+        ;
+        break;
+      default:
+        jj_la1[6] = jj_gen;
+        break label_3;
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case MULTIPLICACION:
+        jj_consume_token(MULTIPLICACION);
+        e2 = terminalesNumeros();
+                            //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
+                            //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
+
+                                if(pila.size() > 0 && pila.getLast().equals("*")){
+                                    //Se comprueba que no se haya generado antes una variable temporal
+                                    //Si es asi, el utiliza la ultima variable temporal generada
+                                    aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
+                                    generarOperacionAritmetica("*",aux,e2);
+
+                                    //Eliminamos el elemto final
+                                    pila.pop();
+                                    pila.add("*");
+                                }
+                                /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
+                                la funcion generarOperacion, de la siguiente forma
+                                */
+                                else{
+                                    e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
+                                    generarOperacionAritmetica("*",e1,e2);
+
+                                    //Guardamos el operador en la pila
+                                    pila.add("*");
+                                }
+        break;
+      case DIVISION:
+        jj_consume_token(DIVISION);
+        e2 = terminalesNumeros();
+                                //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
+                                //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
+
+                                if(pila.size() > 0 && pila.getLast().equals("/")){
+                                    //Se comprueba que no se haya generado antes una variable temporal
+                                    //Si es asi, el utiliza la ultima variable temporal generada
+                                    aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
+                                    generarOperacionAritmetica("/",aux,e2);
+
+                                    //Eliminamos el elemto final
+                                    pila.pop();
+                                    pila.add("/");
+                                }
+                                /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
+                                la funcion generarOperacion, de la siguiente forma
+                                */
+                                else{
+                                    e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
+                                    generarOperacionAritmetica("/",e1,e2);
+
+                                    //Guardamos el operador en la pila
+                                    pila.add("/");
+                                }
+        break;
+      default:
+        jj_la1[7] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+    }
+                               {if (true) return e1;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void operadores() throws ParseException {
+  final public String terminalesNumeros() throws ParseException {
+                            String t="";
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case SUMA:
-    case RESTA:
-    case MULTIPLICACION:
-    case DIVISION:
-    case MODULO:
-      operadoresAritmeticos();
+    case NUMERO_ENTERO:
+      jj_consume_token(NUMERO_ENTERO);
+                      t=token.image;
       break;
-    case LOGICO_AND:
-    case LOGICO_OR:
-      operadoresLogicos();
+    case NUMERO_DECIMAL:
+      jj_consume_token(NUMERO_DECIMAL);
+                       t=token.image;
       break;
-    case OPERADOR_IGUAL:
-    case OPERADOR_DIFERENTE:
-    case OPERADOR_MAYOR:
-    case OPERADOR_MENOR:
-    case OPERADOR_MAYOR_IGUAL:
-    case OPERADOR_MENOR_IGUAL:
-      operadoresRelacionales();
+    case VARIABLE:
+      jj_consume_token(VARIABLE);
+                    //EXISTENCIA DE IDENTIFICADORES
+                 // Sino existe el id, lo guardamos en nuestra arreglo de errores
+                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                        tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                        token.beginLine + " column:" + token.beginColumn);
+                    }else{
+                        t=token.image;
+                    }
+      break;
+    case PAREN_ABIERTO:
+      jj_consume_token(PAREN_ABIERTO);
+      t = operacionAritmetica();
+      jj_consume_token(PAREN_CERRADO);
       break;
     default:
-      jj_la1[9] = jj_gen;
+      jj_la1[8] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+      {if (true) return t;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void operadoresAritmeticos() throws ParseException {
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case SUMA:
+  final public String operacionConcatenacion() throws ParseException {
+                                 String ex;
+    jj_consume_token(CADENA_TEXTO);
+                   ex=token.image;
+    label_4:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case SUMA:
+        ;
+        break;
+      default:
+        jj_la1[9] = jj_gen;
+        break label_4;
+      }
       jj_consume_token(SUMA);
+      jj_consume_token(CADENA_TEXTO);
+                                                           ex=token.image;
+    }
+     {if (true) return ex;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String asignarBooleano() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case BOOLEANO_VERDADERO:
+      jj_consume_token(BOOLEANO_VERDADERO);
+                          {if (true) return token.image;}
       break;
-    case RESTA:
-      jj_consume_token(RESTA);
-      break;
-    case MULTIPLICACION:
-      jj_consume_token(MULTIPLICACION);
-      break;
-    case DIVISION:
-      jj_consume_token(DIVISION);
-      break;
-    case MODULO:
-      jj_consume_token(MODULO);
+    case BOOLEANO_FALSO:
+      jj_consume_token(BOOLEANO_FALSO);
+                       {if (true) return token.image;}
       break;
     default:
       jj_la1[10] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
   }
 
-  final public void operadoresRelacionales() throws ParseException {
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case OPERADOR_IGUAL:
-      jj_consume_token(OPERADOR_IGUAL);
-      break;
-    case OPERADOR_DIFERENTE:
-      jj_consume_token(OPERADOR_DIFERENTE);
-      break;
-    case OPERADOR_MAYOR:
-      jj_consume_token(OPERADOR_MAYOR);
-      break;
-    case OPERADOR_MAYOR_IGUAL:
-      jj_consume_token(OPERADOR_MAYOR_IGUAL);
-      break;
-    case OPERADOR_MENOR:
-      jj_consume_token(OPERADOR_MENOR);
-      break;
-    case OPERADOR_MENOR_IGUAL:
-      jj_consume_token(OPERADOR_MENOR_IGUAL);
-      break;
-    default:
-      jj_la1[11] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-  }
+//TERMINA MODIFICACION DE FUNCIONES BNF
 
-  final public void operadoresLogicos() throws ParseException {
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case LOGICO_AND:
-      jj_consume_token(LOGICO_AND);
-      break;
-    case LOGICO_OR:
-      jj_consume_token(LOGICO_OR);
-      break;
-    default:
-      jj_la1[12] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
-  }
+/*
+void operacionParentesis():{}{
+    <PAREN_ABIERTO> operacion() <PAREN_CERRADO>
+}
+
+void operadores():{}{
+    operadoresAritmeticos() | operadoresLogicos() | operadoresRelacionales()
+}*/
 
 //DECLARACION DE VARIABLES:COMPROBACION DE TIPOS
   final public void declaracionVariables() throws ParseException {
     String identificador = "";
     String asignado = "";
     String tipoDato = "";
+    String aux;
     jj_consume_token(DEFINIR);
     tipoDato = tiposDato();
     jj_consume_token(VARIABLE);
@@ -481,17 +640,23 @@ public class Pseasy implements PseasyConstants {
       asignado = asignacion();
       break;
     default:
-      jj_la1[13] = jj_gen;
+      jj_la1[11] = jj_gen;
       ;
     }
                                //Se evalua si se esta asignando el tipo correcto al identificador
                     if(!asignado.equals("")){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
-                        System.out.println("asignado =" + asignado);
+                        //System.out.println("asignado =" + asignado);
                                   if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
                                       tabla.add("The token: " + asignado + " doesn't correspond to the " +
                                         TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
+                                  }else{
+                                      aux = tipoDato + " " + identificador + " = " +asignado + "\n";
+                                      agregarCodigoIntermedio(aux);
                                   }
-                          }
+                    } else{
+                    aux = tipoDato +" "+ identificador + "\n";
+                    agregarCodigoIntermedio(aux);
+                    }
   }
 
   final public String tiposDato() throws ParseException {
@@ -513,7 +678,7 @@ public class Pseasy implements PseasyConstants {
                   {if (true) return token.image;}
       break;
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[12] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -521,10 +686,13 @@ public class Pseasy implements PseasyConstants {
   }
 
   final public void leerDato() throws ParseException {
+                 String leer; String variable;
     try {
       jj_consume_token(LEER);
       jj_consume_token(VARIABLE);
+                         variable=token.image;
       jj_consume_token(DELIMITADOR);
+                                                               agregarCodigoIntermedio("Leer " + variable );
     } catch (ParseException e) {
         Token t;
         do{
@@ -535,26 +703,34 @@ public class Pseasy implements PseasyConstants {
   }
 
   final public void imprimirDato() throws ParseException {
+                     String texto; String variable;
     try {
       if (jj_2_1(3)) {
         jj_consume_token(ESCRIBIR);
         jj_consume_token(CADENA_TEXTO);
+                                              texto=token.image;
         jj_consume_token(DELIMITADOR);
+                                                                                 agregarCodigoIntermedio("\tEscribir " + texto + "\n");
       } else if (jj_2_2(3)) {
         jj_consume_token(ESCRIBIR);
         jj_consume_token(CADENA_TEXTO);
+                                              texto=token.image;
         jj_consume_token(COMA);
         jj_consume_token(VARIABLE);
+                                                                                  variable=token.image;
         jj_consume_token(DELIMITADOR);
+                                                                                                                      agregarCodigoIntermedio("\tEscribir " + texto +"," + variable + "\n" );
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case ESCRIBIR:
           jj_consume_token(ESCRIBIR);
           jj_consume_token(VARIABLE);
+                              variable = token.image;
           jj_consume_token(DELIMITADOR);
+                                                                    agregarCodigoIntermedio("\tEscribir " + variable + "\n");
           break;
         default:
-          jj_la1[15] = jj_gen;
+          jj_la1[13] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -568,12 +744,163 @@ public class Pseasy implements PseasyConstants {
     }
   }
 
+/*  MODIFICAMOS LA FUNCION CONDICION*/
+  final public BloqueCondicion condicion() throws ParseException {
+                             BloqueCondicion c1,c2;
+    c1 = condTerm();
+    label_5:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case LOGICO_OR:
+        ;
+        break;
+      default:
+        jj_la1[14] = jj_gen;
+        break label_5;
+      }
+      jj_consume_token(LOGICO_OR);
+                                generarLabel(c1.etqFalso);
+      c2 = condTerm();
+                            generarLabel(c1.etqVerdad);
+                            generarGoto(c2.etqVerdad);
+                            c1=c2;
+    }
+                                      {if (true) return c1;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public BloqueCondicion condTerm() throws ParseException {
+                            BloqueCondicion c1; BloqueCondicion c2;
+    c1 = condFact();
+    label_6:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case LOGICO_AND:
+        ;
+        break;
+      default:
+        jj_la1[15] = jj_gen;
+        break label_6;
+      }
+      jj_consume_token(LOGICO_AND);
+                                 generarLabel(c1.etqVerdad);
+      c2 = condFact();
+                            generarLabel(c1.etqFalso);
+                            generarGoto(c2.etqFalso);
+                            c1=c2;
+    }
+                            {if (true) return c1;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public BloqueCondicion condFact() throws ParseException {
+ BloqueCondicion c1;
+ boolean negado = false;
+    label_7:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case LOGICO_NOT:
+        ;
+        break;
+      default:
+        jj_la1[16] = jj_gen;
+        break label_7;
+      }
+      jj_consume_token(LOGICO_NOT);
+                  negado = !negado;
+    }
+    c1 = condSimple();
+        if(negado) interCondicion(c1);
+        {if (true) return c1;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public BloqueCondicion condSimple() throws ParseException {
+                              String ex1;String operador;String ex2;
+    ex1 = terminalesBooleanas();
+    operador = operadoresRelacionales();
+    ex2 = tipoOperacion();
+                            ex2 = (obtenerUltimoTmp() == null) ? ex2:obtenerUltimoTmp();
+                        {if (true) return generarOperacionRelacional(ex1,ex2,operador);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String operadoresRelacionales() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case OPERADOR_IGUAL:
+      jj_consume_token(OPERADOR_IGUAL);
+                      {if (true) return token.image;}
+      break;
+    case OPERADOR_DIFERENTE:
+      jj_consume_token(OPERADOR_DIFERENTE);
+                            {if (true) return token.image;}
+      break;
+    case OPERADOR_MAYOR:
+      jj_consume_token(OPERADOR_MAYOR);
+                        {if (true) return token.image;}
+      break;
+    case OPERADOR_MAYOR_IGUAL:
+      jj_consume_token(OPERADOR_MAYOR_IGUAL);
+                              {if (true) return token.image;}
+      break;
+    case OPERADOR_MENOR:
+      jj_consume_token(OPERADOR_MENOR);
+                        {if (true) return token.image;}
+      break;
+    case OPERADOR_MENOR_IGUAL:
+      jj_consume_token(OPERADOR_MENOR_IGUAL);
+                              {if (true) return token.image;}
+      break;
+    default:
+      jj_la1[17] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String terminalesBooleanas() throws ParseException {
+                              String t;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case NUMERO_ENTERO:
+      jj_consume_token(NUMERO_ENTERO);
+                    {if (true) return token.image;}
+      break;
+    case NUMERO_DECIMAL:
+      jj_consume_token(NUMERO_DECIMAL);
+                      {if (true) return token.image;}
+      break;
+    case CADENA_TEXTO:
+      jj_consume_token(CADENA_TEXTO);
+                     {if (true) return token.image;}
+      break;
+    case VARIABLE:
+      jj_consume_token(VARIABLE);
+      //Comprobamos si la variable existe
+     if(!TablaIdentificadores.checkExistenciaId(token.image)){
+
+        tabla.add("The identifier: " + token.image + " doesnt exist, at line: " + token.beginLine + " column:" + token.endColumn);
+
+     }else{
+        {if (true) return token.image;}
+    }
+      break;
+    default:
+      jj_la1[18] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
   final public void sentenciaSi() throws ParseException {
+                    BloqueCondicion c; String etqFinSi;
     try {
       jj_consume_token(INICIO_CONDICIONAL_SI);
-      condicion();
+      c = condicion();
       jj_consume_token(ENTONCES);
-      label_6:
+                                                          generarLabel(c.etqVerdad);
+      label_8:
       while (true) {
         sentencias();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -582,21 +909,23 @@ public class Pseasy implements PseasyConstants {
         case DEFINIR:
         case INICIO_CICLO_PARA:
         case INICIO_CICLO_MIENTRAS:
-        case INICIO_CICLO_REPETIR:
         case INICIO_CONDICIONAL_SI:
         case INICIO_CONDICIONAL_SEGUN:
         case VARIABLE:
           ;
           break;
         default:
-          jj_la1[16] = jj_gen;
-          break label_6;
+          jj_la1[19] = jj_gen;
+          break label_8;
         }
       }
+            etqFinSi = generarEq();
+            generarGoto(etqFinSi);
+            generarLabel(c.etqFalso);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case CONDICIONAL_SINO:
         jj_consume_token(CONDICIONAL_SINO);
-        label_7:
+        label_9:
         while (true) {
           sentencias();
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -605,23 +934,23 @@ public class Pseasy implements PseasyConstants {
           case DEFINIR:
           case INICIO_CICLO_PARA:
           case INICIO_CICLO_MIENTRAS:
-          case INICIO_CICLO_REPETIR:
           case INICIO_CONDICIONAL_SI:
           case INICIO_CONDICIONAL_SEGUN:
           case VARIABLE:
             ;
             break;
           default:
-            jj_la1[17] = jj_gen;
-            break label_7;
+            jj_la1[20] = jj_gen;
+            break label_9;
           }
         }
         break;
       default:
-        jj_la1[18] = jj_gen;
+        jj_la1[21] = jj_gen;
         ;
       }
       jj_consume_token(FIN_CONDICIONAL_SI);
+             generarLabel(etqFinSi);
     } catch (ParseException e) {
         Token t;
         do{
@@ -632,15 +961,24 @@ public class Pseasy implements PseasyConstants {
   }
 
   final public void sentenciaSegun() throws ParseException {
+                       String ex ="";String finSegun; String finalCaso; String eCaso;
     jj_consume_token(INICIO_CONDICIONAL_SEGUN);
     jj_consume_token(VARIABLE);
+                if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                    tabla.add("The identifier: " + token.image + " doesn`t exist, at line: " +
+                    token.beginLine + " column:" + token.endColumn);
+                        }
+                else {ex=token.image;}
     jj_consume_token(HACER);
-    label_8:
+    label_10:
     while (true) {
       jj_consume_token(CASO);
-      constantes();
+      eCaso = constantes();
       jj_consume_token(OPERADOR_DOS_PUNTOS);
-      label_9:
+      finalCaso = generarEq();
+        agregarCodigoIntermedio("\tif " + ex + " != " + eCaso + " goto " + finalCaso + "\n");
+        generarLabel(finalCaso);
+      label_11:
       while (true) {
         sentencias();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -649,15 +987,14 @@ public class Pseasy implements PseasyConstants {
         case DEFINIR:
         case INICIO_CICLO_PARA:
         case INICIO_CICLO_MIENTRAS:
-        case INICIO_CICLO_REPETIR:
         case INICIO_CONDICIONAL_SI:
         case INICIO_CONDICIONAL_SEGUN:
         case VARIABLE:
           ;
           break;
         default:
-          jj_la1[19] = jj_gen;
-          break label_9;
+          jj_la1[22] = jj_gen;
+          break label_11;
         }
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -665,15 +1002,15 @@ public class Pseasy implements PseasyConstants {
         ;
         break;
       default:
-        jj_la1[20] = jj_gen;
-        break label_8;
+        jj_la1[23] = jj_gen;
+        break label_10;
       }
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case CASO_PREDETERMINADO:
       jj_consume_token(CASO_PREDETERMINADO);
       jj_consume_token(OPERADOR_DOS_PUNTOS);
-      label_10:
+      label_12:
       while (true) {
         sentencias();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -682,60 +1019,40 @@ public class Pseasy implements PseasyConstants {
         case DEFINIR:
         case INICIO_CICLO_PARA:
         case INICIO_CICLO_MIENTRAS:
-        case INICIO_CICLO_REPETIR:
         case INICIO_CONDICIONAL_SI:
         case INICIO_CONDICIONAL_SEGUN:
         case VARIABLE:
           ;
           break;
         default:
-          jj_la1[21] = jj_gen;
-          break label_10;
+          jj_la1[24] = jj_gen;
+          break label_12;
         }
       }
       break;
     default:
-      jj_la1[22] = jj_gen;
+      jj_la1[25] = jj_gen;
       ;
     }
     jj_consume_token(FIN_SEGUN);
+                 finSegun = generarEq(); generarLabel(finSegun);
   }
 
 //Ciclo for
   final public void sentenciaPara() throws ParseException {
+                      BloqueCondicion c;String inicioPara; String ex1; String ex2;String variacion;
     jj_consume_token(INICIO_CICLO_PARA);
+                              inicioPara=generarEq();
+                              generarLabel(inicioPara);
     jj_consume_token(VARIABLE);
+                   ex1=token.image;
     jj_consume_token(ASIGNACION);
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case CADENA_TEXTO:
-    case NUMERO_ENTERO:
-    case NUMERO_DECIMAL:
-    case BOOLEANO_FALSO:
-    case BOOLEANO_VERDADERO:
-      constantes();
-      break;
-    case VARIABLE:
-      jj_consume_token(VARIABLE);
-      break;
-    default:
-      jj_la1[23] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
+    ex2 = tipoOperacion();
+                                                                      generarOperacionAsignacion(ex1,ex2);
     jj_consume_token(CONDICION_CICLO_PARA);
-    condicion();
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case INCREMENTO_CICLO_PARA:
-      jj_consume_token(INCREMENTO_CICLO_PARA);
-      break;
-    case DECREMENTO_CICLO_PARA:
-      jj_consume_token(DECREMENTO_CICLO_PARA);
-      break;
-    default:
-      jj_la1[24] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
-    }
+    c = condicion();
+                                                  generarLabel(c.etqVerdad);
+    variacion = variacionPara();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NUMERO_ENTERO:
       jj_consume_token(NUMERO_ENTERO);
@@ -744,66 +1061,10 @@ public class Pseasy implements PseasyConstants {
       jj_consume_token(NUMERO_DECIMAL);
       break;
     default:
-      jj_la1[25] = jj_gen;
+      jj_la1[26] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
-    label_11:
-    while (true) {
-      sentencias();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LEER:
-      case ESCRIBIR:
-      case DEFINIR:
-      case INICIO_CICLO_PARA:
-      case INICIO_CICLO_MIENTRAS:
-      case INICIO_CICLO_REPETIR:
-      case INICIO_CONDICIONAL_SI:
-      case INICIO_CONDICIONAL_SEGUN:
-      case VARIABLE:
-        ;
-        break;
-      default:
-        jj_la1[26] = jj_gen;
-        break label_11;
-      }
-    }
-    jj_consume_token(FIN_CICLO_PARA);
-  }
-
-//Ciclo do while
-  final public void sentenciaRepetir() throws ParseException {
-    jj_consume_token(INICIO_CICLO_REPETIR);
-    label_12:
-    while (true) {
-      sentencias();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LEER:
-      case ESCRIBIR:
-      case DEFINIR:
-      case INICIO_CICLO_PARA:
-      case INICIO_CICLO_MIENTRAS:
-      case INICIO_CICLO_REPETIR:
-      case INICIO_CONDICIONAL_SI:
-      case INICIO_CONDICIONAL_SEGUN:
-      case VARIABLE:
-        ;
-        break;
-      default:
-        jj_la1[27] = jj_gen;
-        break label_12;
-      }
-    }
-    jj_consume_token(CONDICION_CICLO_REPETIR);
-    condicion();
-    jj_consume_token(DELIMITADOR);
-  }
-
-//Ciclo while
-  final public void sentenciaMientras() throws ParseException {
-    jj_consume_token(INICIO_CICLO_MIENTRAS);
-    condicion();
-    jj_consume_token(HACER);
     label_13:
     while (true) {
       sentencias();
@@ -813,18 +1074,77 @@ public class Pseasy implements PseasyConstants {
       case DEFINIR:
       case INICIO_CICLO_PARA:
       case INICIO_CICLO_MIENTRAS:
-      case INICIO_CICLO_REPETIR:
       case INICIO_CONDICIONAL_SI:
       case INICIO_CONDICIONAL_SEGUN:
       case VARIABLE:
         ;
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[27] = jj_gen;
         break label_13;
       }
     }
+                               agregarCodigoIntermedio("\t" + ex1 + " " + variacion + " " + "1");
+    jj_consume_token(FIN_CICLO_PARA);
+                             generarGoto(inicioPara); generarLabel(c.etqFalso);
+  }
+
+  final public String variacionPara() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case INCREMENTO_CICLO_PARA:
+      jj_consume_token(INCREMENTO_CICLO_PARA);
+                             {if (true) return "inc";}
+      break;
+    case DECREMENTO_CICLO_PARA:
+      jj_consume_token(DECREMENTO_CICLO_PARA);
+                              {if (true) return "des";}
+      break;
+    default:
+      jj_la1[28] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+/*
+//Ciclo do while
+void sentenciaRepetir():{ }{
+
+    <INICIO_CICLO_REPETIR> ( sentencias() )+
+    <CONDICION_CICLO_REPETIR> condicion() <DELIMITADOR>
+}*/
+
+//Ciclo while
+  final public void sentenciaMientras() throws ParseException {
+                          BloqueCondicion c;String inicioWhile="";
+    jj_consume_token(INICIO_CICLO_MIENTRAS);
+                                inicioWhile=generarEq();
+                               generarLabel(inicioWhile);
+    c = condicion();
+    jj_consume_token(HACER);
+                           generarLabel(c.etqVerdad);
+    label_14:
+    while (true) {
+      sentencias();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case LEER:
+      case ESCRIBIR:
+      case DEFINIR:
+      case INICIO_CICLO_PARA:
+      case INICIO_CICLO_MIENTRAS:
+      case INICIO_CONDICIONAL_SI:
+      case INICIO_CONDICIONAL_SEGUN:
+      case VARIABLE:
+        ;
+        break;
+      default:
+        jj_la1[29] = jj_gen;
+        break label_14;
+      }
+    }
     jj_consume_token(FIN_CICLO_MIENTRAS);
+                          generarGoto(inicioWhile); generarLabel(c.etqFalso);
   }
 
   private boolean jj_2_1(int xla) {
@@ -869,7 +1189,7 @@ public class Pseasy implements PseasyConstants {
   private boolean jj_lookingAhead = false;
   private boolean jj_semLA;
   private int jj_gen;
-  final private int[] jj_la1 = new int[29];
+  final private int[] jj_la1 = new int[30];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -877,10 +1197,10 @@ public class Pseasy implements PseasyConstants {
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x70000,0x70000,0x3e00,0xf0000000,0x8000000,0x3e00,0xf7f00000,0x8000000,0x3e00,0xf7f00000,0x1f00000,0xf0000000,0x6000000,0x80000,0x78,0x20000,0x70000,0x70000,0x0,0x70000,0x0,0x70000,0x0,0x3e00,0x0,0xc00,0x70000,0x70000,0x70000,};
+      jj_la1_0 = new int[] {0x70000,0x70000,0x3e00,0x3e00,0x300000,0x300000,0xc00000,0xc00000,0xc00,0x100000,0x3000,0x80000,0x78,0x20000,0x2000000,0x1000000,0x4000000,0xf8000000,0xe00,0x70000,0x70000,0x0,0x70000,0x0,0x70000,0x0,0xc00,0x70000,0x0,0x70000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x845420,0x845420,0x0,0x3,0x0,0x800008,0x3,0x0,0x800008,0x3,0x0,0x3,0x0,0x0,0x0,0x0,0x845420,0x845420,0x10000,0x845420,0x80000,0x845420,0x100000,0x800000,0x180,0x0,0x845420,0x845420,0x845420,};
+      jj_la1_1 = new int[] {0x422210,0x422210,0x0,0x400004,0x0,0x0,0x0,0x0,0x400004,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x400000,0x422210,0x422210,0x8000,0x422210,0x40000,0x422210,0x80000,0x0,0x422210,0xc0,0x422210,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[2];
   private boolean jj_rescan = false;
@@ -897,7 +1217,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -912,7 +1232,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -923,7 +1243,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -934,7 +1254,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -944,7 +1264,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -954,7 +1274,7 @@ public class Pseasy implements PseasyConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1069,12 +1389,12 @@ public class Pseasy implements PseasyConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[63];
+    boolean[] la1tokens = new boolean[62];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 29; i++) {
+    for (int i = 0; i < 30; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1086,7 +1406,7 @@ public class Pseasy implements PseasyConstants {
         }
       }
     }
-    for (int i = 0; i < 63; i++) {
+    for (int i = 0; i < 62; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
