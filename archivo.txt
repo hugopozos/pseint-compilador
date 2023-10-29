@@ -1,8 +1,10 @@
 Algoritmo
     definir entero x;
     definir entero y;
+    definir entero z;
     x = 10;
     y = 1 + x;
     x = 20;
-    y = 2 + x; 
+    y = 1 + x;
+
 FinAlgoritmo

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.io.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import src.TablaIdentificadores;
 
 /** Token Manager. */
@@ -14,6 +15,11 @@ public class PseasyTokenManager implements PseasyConstants
     //PILA DE OPERADORES
     //En esta pila iremos guardando los operadores para comprobar la jerarquia de operadores
     static Deque<String> pila = new ArrayDeque();
+
+   //Mapa de variable y constante
+   // Aqui se guarda la relacion de variable y constante
+   //Con la finalidad de relacionar la propagacion de constantes
+   static HashMap<String,String> constantes = new HashMap();
 
   /** Debug output. */
   public  java.io.PrintStream debugStream = System.out;

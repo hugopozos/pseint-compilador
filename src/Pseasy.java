@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.io.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import src.TablaIdentificadores;
 public class Pseasy implements PseasyConstants {
 
@@ -17,6 +18,9 @@ public class Pseasy implements PseasyConstants {
         static ArrayList<String> listaTemporales = new ArrayList();
 
         static Deque<String> pila = PseasyTokenManager.pila;
+
+        //Mapa que guarda las constantes del programa
+        static HashMap<String,String> constantes = PseasyTokenManager.constantes;
 
         //Variables para generacion de codigo intermedio
         private static int tmpContador = 0;
@@ -37,10 +41,9 @@ public class Pseasy implements PseasyConstants {
                     System.out.println("\ncompilation generated with success");
                     ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio);
 
-                    //Arrojamos linea por linea el codigo intermedio
-                       for(String c:codigoIntermedio){
-                           System.out.println(c);
-                       }
+                    //CODIGO OPTIMIZADO
+                    progacionConstantes(codigoIntermedio);
+                    ArchivoOptimizado.escribirArchivo(codigoIntermedio);
 
 
                 }
@@ -88,7 +91,7 @@ public class Pseasy implements PseasyConstants {
           }
 
           private static void generarOperacionAsignacion(String id, String exp){
-            String tmp = id +" = " + exp + "\n";
+            String tmp = id +"=" + exp + "\n";
             codigoIntermedio.add(tmp);
           }
 
@@ -125,13 +128,48 @@ public class Pseasy implements PseasyConstants {
           }
 
           // METODOS PARA LA OPTIMIZACION DE CODIGO INTERMEDIO
-          private static void reduccionPotencias(ArrayList<String>codigoIntermedio){
-                 //Recorrer el arrelgo
+          private static void progacionConstantes(ArrayList<String>codigoIntermedio){
+
                  int index=0;
+                 boolean flag = false;
+                 String tmp;
+                 //Mapa que guarda las constantes del programa
+                 HashMap<String,String> constantes = new HashMap();
+                 String aux[];
+                 //Recorrer el arrelgo de codigo intermedio
                  for(String codigo:codigoIntermedio){
-                      //Buscar la sentencia que tenga un "*"
-                       System.out.println(codigo);
+                      //Buscar sentencia de asignacion
+                      //System.out.println(codigo);
+                      //System.out.println(codigo.trim().matches("x=\\d+"));
+                      aux= codigo.trim().split("=");
+
+                      //Comprobamos que estemos usando expresiones tipo id=valor
+                      if(aux.length > 1){
+                      if(codigo.trim().matches("[a-zA-z]+=[0-9]+")) {
+
+                          constantes.put(aux[0],aux[1]);// Guardamos identificador y su valor numerico
+                                //System.out.println(aux[1]);
+                      }else if(!aux[1].matches("tmp[0-9]+")){
+                        //Comprobamos si la sentencia de asignacion se este utilizando una constante ya declarada
+                            index = codigoIntermedio.indexOf(codigo);
+
+                            //aux[1]= aux[1].replace("x","10");
+                            aux[1]= encontrarId(aux[1],constantes);
+                            tmp  =  aux[0] + "=" + aux[1] + "\n";
+                           codigoIntermedio.set(index,tmp);
+                      }
+                    }
                  }
+          }
+
+          private static String encontrarId(String asignacion,HashMap<String,String> constantes){
+            String res=asignacion;
+                for(String constante:constantes.keySet()){
+                    if(res.contains(constante)){
+                        res = res.replace(constante,constantes.get(constante));
+                    }
+                }
+                return res;
           }
 
 // Gramaticas
@@ -240,8 +278,15 @@ public class Pseasy implements PseasyConstants {
                                     // variable = tmp# -> se asigna la variable al ultimo tmp generado
 
                                     asignado = (obtenerUltimoTmp() == null) ? asignado : obtenerUltimoTmp();
+
+                                    //OPTIMIZACION DE CODIGO
+                                    //si el asignado es un numero, es una asignacion de un numero
+                                    if(asignado.matches("\\d+")) {
+                                        //Se guarda en la tabla de constantes
+                                        constantes.put(identificador,asignado);
+                                    }
                                      generarOperacionAsignacion(identificador,asignado);
-                                    limpiarTemporales();
+                                    limpiarTemporales(); // Terminando de hacer una asignacion, eliminamos las variables temporales
 
 
                                 }
