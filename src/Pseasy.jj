@@ -18,20 +18,26 @@ public class Pseasy {
 
         static ArrayList<String> tabla = PseasyTokenManager.tabla;
 
+        //Variable para guardar el elemento asignado
+        static String valorAsignado = null;
+
         //Arreglo para guardar lo generado por el codigo intermedio
         static ArrayList<String> codigoIntermedio = new ArrayList();
 
         //Arreglo para guardar variables temporales
         static ArrayList<String> listaTemporales = new ArrayList();
 
-        static Deque<String> pila = PseasyTokenManager.pila;
+
 
         //Mapa que guarda las constantes del programa
         static HashMap<String,String> constantes = PseasyTokenManager.constantes;
 
+
+
         //Variables para generacion de codigo intermedio
         private static int tmpContador = 0;
         private static int etContador = 0;
+
 
         public static void main(String[] args) {
             try{
@@ -49,8 +55,15 @@ public class Pseasy {
                     ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio);
 
                     //CODIGO OPTIMIZADO
+                    //Optimizacion local
                     progacionConstantes(codigoIntermedio);
+
+
+
+                    //Optimizacion de ciclos
+                    //Loop Unrolling (Expansion de bucles) - Eliminar o reducir el numero de iteraciones
                     ArchivoOptimizado.escribirArchivo(codigoIntermedio);
+
 
 
                 }
@@ -104,11 +117,12 @@ public class Pseasy {
 
 
 
-          private static void generarOperacionAritmetica(String op,String ex1, String ex2){
+          private static String generarOperacionAritmetica(String op,String ex1, String ex2){
 
                 String aux = generarTmp();
                 String cI = aux + "=" + ex1 + op + ex2 + "\n";
                 codigoIntermedio.add(cI);
+                return aux;
           }
 
           //METODOS PARA GENERAR EL CODIGO INTERMEDIO EN CONDICIONES
@@ -135,6 +149,7 @@ public class Pseasy {
           }
 
           // METODOS PARA LA OPTIMIZACION DE CODIGO INTERMEDIO
+          //Optimizacion local
           private static void progacionConstantes(ArrayList<String>codigoIntermedio){
 
                  int index=0;
@@ -177,6 +192,11 @@ public class Pseasy {
                     }
                 }
                 return res;
+          }
+
+          //Optimizacion de bucles
+          private static void expansionBucles(ArrayList<String>codigoIntermedio){
+
           }
         }
 
@@ -229,14 +249,19 @@ PARSER_END(Pseasy)
 TOKEN_MGR_DECLS:{
     static ArrayList<String> tabla = new ArrayList();
 
+    //Variable auxiliar para parte semantica
+    static String valorAsignado=null;
+
     //PILA DE OPERADORES
     //En esta pila iremos guardando los operadores para comprobar la jerarquia de operadores
-    static Deque<String> pila = new ArrayDeque();
+
 
    //Mapa de variable y constante
    // Aqui se guarda la relacion de variable y constante
    //Con la finalidad de relacionar la propagacion de constantes
    static HashMap<String,String> constantes = new HashMap();
+
+
 }
 
 // Inicio y fin del programa
@@ -326,7 +351,7 @@ TOKEN : {
     |
     <PAREN_CERRADO: ")">
 }
-
+//
 // Ciclos
 TOKEN : {
     <INICIO_CICLO_PARA: "Para">
@@ -398,7 +423,11 @@ void programa(): { }{
        try{
           <INICIO>
           ( sentencias() )*
-          <FIN>{//TablaIdentificadores.mostrarTabla();
+          <FIN>{
+          //TablaIdentificadores.mostrarTabla();
+          for(String c:constantes.keySet()){
+            System.out.println("Variable:" + c + " dato:" + constantes.get(c));
+          }
        }
        }catch(ParseException e){
             Token t;
@@ -423,14 +452,12 @@ void sentencias():{
             sentenciaSi() |
             sentenciaSegun() |
             sentenciaPara() |
-            //sentenciaRepetir() |
             sentenciaMientras()
 
 
 
 }
-//ASIGNACION DE VALOR
-//CAMBIAR FORMA EN COMO SE HACE LA C
+
 void sentenciaAsignacion():{
     String identificador = null;
     String asignado = null;
@@ -452,30 +479,19 @@ void sentenciaAsignacion():{
         asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
 
                         //--- PARTE SEMANTICA: COMPROBACION DE TIPOS
-                        if(asignado != null && identificador !=null){
+                        if(valorAsignado != null && identificador !=null){
                                   //Si asignado e identificador tienen un valor asignado, se comprueban que sean del mismo tipo
-                                if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
+                                if(!TablaIdentificadores.verifiacionConToken(identificador,valorAsignado)){
 
-                                    tabla.add("The token: " + asignado + " doesn't correspond to the " +
+                                    tabla.add("The token: " + valorAsignado + " doesn't correspond to the " +
                                             TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
 
                                 // ----- GENERACION CODIGO INTERMEDIO
                                 //Si esta bien semanticamente, lo pasamos a codigo intermedio
                                 }else{
-                                    // variable = tmp# -> se asigna la variable al ultimo tmp generado
 
-                                    asignado = (obtenerUltimoTmp() == null) ? asignado : obtenerUltimoTmp();
-
-                                    //OPTIMIZACION DE CODIGO
-                                    //si el asignado es un numero, es una asignacion de un numero
-                                    if(asignado.matches("\\d+")) {
-                                        //Se guarda en la tabla de constantes
-                                        constantes.put(identificador,asignado);
-                                    }
                                      generarOperacionAsignacion(identificador,asignado);
-                                    limpiarTemporales(); // Terminando de hacer una asignacion, eliminamos las variables temporales
-
-
+                                      valorAsignado = null;
                                 }
 
                         }
@@ -530,186 +546,33 @@ String asignacion():{String asignado = "";}{
     }
 }
 
-/*
-String condicion():{String asignado = "";} {
-    asignado=operacion() {return asignado;}
-    //( operadoresRelacionales() operacion() )* -> Evaluar si quiero dejar esto en mi gramatica
-}*/
 
-
-/*
-* Separar las operaciones aritmeticas de las relaciones
-*
-* */
-/*
-String operacion():{
-    String t = "";
-    String id = "";
-    String valor = "";
- }{
-    ( <LOGICO_NOT> )* ( <VARIABLE> { //EXISTENCIA DE IDENTIFICADORES
-
-                                    // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
-                                        tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
-                                                    token.beginLine + " column:" + token.beginColumn);
-                                    }else{
-                                        t=token.image;
-                                    }
-
-}
-    | t=constantes() {  //En cualquier asignacion de constantes, se utiliza una variable temporal
-                        //tmp = 10
-                        //return tmp
-
-                         }
-    | operacionParentesis() )
-
-    (operadores() ( <LOGICO_NOT> )* (<VARIABLE> {    //EXISTENCIA DE IDENTIFICADORES
-                                                     // Sino existe el id, lo guardamos en nuestra arreglo de errores
-                                                        if(!TablaIdentificadores.checkExistenciaId(token.image)){
-                                                            tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
-                                                            token.beginLine + " column:" + token.beginColumn);
-                                                        }else{
-                                                            t=token.image;
-                                                        }
-}
-    | t=constantes()| operacionParentesis() ))*
-    {return t;}
-}*/
 
 /*INICIA MODIFICACION DE FUNCIONES BNF*/
 String tipoOperacion(): {String t;}{
     (t=operacionAritmetica()
     |t=operacionConcatenacion()
     |t=asignarBooleano())
-    {//Borramos los elementos de la pila
-          pila.clear();
+    {
           return t;
           }
 }
-/*
-* EXPLICACION DE VARIABLES
-* e1 y e2 son variables que guardan la representacion en string del token
-* Pila es una estructura de datos que nos permite comprobar la jerarquia de operadores
-* */
-String operacionAritmetica():{String e1=""; String e2="";String aux="";}{
-    e1 = nivelSegundoJerarquia() (<SUMA>  e2=nivelSegundoJerarquia() {
 
-
-                        //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
-                        //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
-
-                        if(pila.size() > 0 && (pila.getLast().equals("+") || pila.getLast().equals("-"))  ){
-                            //Se comprueba que no se haya generado antes una variable temporal
-                            //Si es asi, el utiliza la ultima variable temporal generada
-                            aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
-                            generarOperacionAritmetica("+",aux,e2);
-
-                            //Eliminamos el elemto final
-                            pila.pop();
-                            pila.add("+");
-                        }
-                        /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
-                        la funcion generarOperacion, de la siguiente forma
-                        */
-                        else{
-                            e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
-                            generarOperacionAritmetica("+",e1,e2);
-
-                            //Guardamos el operador en la pila
-                            pila.add("+");
-                        }
-
-
-
-                        }
-                        |<RESTA> e2=nivelSegundoJerarquia() {
-                            //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
-                            //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
-
-                                if(pila.size() > 0 && (pila.getLast().equals("-") ||pila.getLast().equals("+"))){
-                                    //Se comprueba que no se haya generado antes una variable temporal
-                                    //Si es asi, el utiliza la ultima variable temporal generada
-                                    aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
-                                    generarOperacionAritmetica("-",aux,e2);
-
-                                    //Eliminamos el elemto final
-                                    pila.pop();
-                                    pila.add("-");
-                                }
-                                /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
-                                la funcion generarOperacion, de la siguiente forma
-                                */
-                                else{
-                                    e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
-                                    generarOperacionAritmetica("-",e1,e2);
-
-                                    //Guardamos el operador en la pila
-                                    pila.add("-");
-                                    }
-                                }
-                            )*
+String operacionAritmetica():{String e1=""; String e2="";}{
+    e1 = nivelSegundoJerarquia() (<SUMA>  e2=nivelSegundoJerarquia() {e1=generarOperacionAritmetica("+",e1,e2);}
+                        |<RESTA> e2=nivelSegundoJerarquia() {e1=generarOperacionAritmetica("-",e1,e2);})*
                                 {return e1;}
 }
 //Funciones para la jerarquia de operadores
-String nivelSegundoJerarquia():{String e1; String e2; String aux="";}{
-    e1 = terminalesNumeros() (<MULTIPLICACION> e2=terminalesNumeros() {
-                            //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
-                            //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
-
-                                if(pila.size() > 0 && (pila.getLast().equals("*") || pila.getLast().equals("/")) ){
-                                    //Se comprueba que no se haya generado antes una variable temporal
-                                    //Si es asi, el utiliza la ultima variable temporal generada
-                                    aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
-                                    generarOperacionAritmetica("*",aux,e2);
-
-                                    //Eliminamos el elemto final
-                                    pila.pop();
-                                    pila.add("*");
-                                }
-                                /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
-                                la funcion generarOperacion, de la siguiente forma
-                                */
-                                else{
-                                    e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
-                                    generarOperacionAritmetica("*",e1,e2);
-
-                                    //Guardamos el operador en la pila
-                                    pila.add("*");
-                                }
-                    }
-                              |<DIVISION> e2=terminalesNumeros() {
-                                //Comprobar si estamos realizando operaciones sobre la misma jerarquia de operadores
-                                //Si la pila de operadores tienen un elemento, comprobamos si el ultimo elemento
-
-                                if(pila.size() > 0 && (pila.getLast().equals("/") || pila.getLast().equals("*") ) ){
-                                    //Se comprueba que no se haya generado antes una variable temporal
-                                    //Si es asi, el utiliza la ultima variable temporal generada
-                                    aux = obtenerUltimoTmp() == null ? e1 : obtenerUltimoTmp();
-                                    generarOperacionAritmetica("/",aux,e2);
-
-                                    //Eliminamos el elemto final
-                                    pila.pop();
-                                    pila.add("/");
-                                }
-                                /*Si la pila de operadore esta vacia, colocamos el orden de los parametros en
-                                la funcion generarOperacion, de la siguiente forma
-                                */
-                                else{
-                                    e2 = obtenerUltimoTmp() == null ? e2 : obtenerUltimoTmp();
-                                    generarOperacionAritmetica("/",e1,e2);
-
-                                    //Guardamos el operador en la pila
-                                    pila.add("/");
-                                }
-                            }
+String nivelSegundoJerarquia():{String e1; String e2;}{
+    e1 = terminalesNumeros() (<MULTIPLICACION> e2=terminalesNumeros() {e1=generarOperacionAritmetica("*",e1,e2);}
+                              |<DIVISION> e2=terminalesNumeros() {e1=generarOperacionAritmetica("/",e1,e2);}
                               )*
                               {return e1;}
 }
 String terminalesNumeros():{String t="";}{
-    (<NUMERO_ENTERO> {t=token.image;}
-    |<NUMERO_DECIMAL> {t=token.image;}
+    (<NUMERO_ENTERO> {t=token.image; valorAsignado=token.image;}
+    |<NUMERO_DECIMAL> {t=token.image;valorAsignado=token.image;}
     |<VARIABLE>{
                     //EXISTENCIA DE IDENTIFICADORES
                  // Sino existe el id, lo guardamos en nuestra arreglo de errores
@@ -718,19 +581,21 @@ String terminalesNumeros():{String t="";}{
                         token.beginLine + " column:" + token.beginColumn);
                     }else{
                         t=token.image;
+                        valorAsignado=token.image;
                     }
 
                 }
     |<PAREN_ABIERTO>t=operacionAritmetica()<PAREN_CERRADO>
     ){return t;}
 }
+
 String operacionConcatenacion():{String ex; }{
-    <CADENA_TEXTO>{ex=token.image;} (<SUMA> <CADENA_TEXTO>{ex=token.image;})*
+    <CADENA_TEXTO>{ex=token.image; valorAsignado=token.image;} (<SUMA> <CADENA_TEXTO>{ex=token.image;})*
     {return ex;}
 }
 String asignarBooleano():{}{
-    <BOOLEANO_VERDADERO> {return token.image;}
-    |<BOOLEANO_FALSO> {return token.image;}
+    <BOOLEANO_VERDADERO> {valorAsignado=token.image; return token.image;}
+    |<BOOLEANO_FALSO> {valorAsignado=token.image; return token.image;}
 }
 
 
@@ -770,8 +635,8 @@ void declaracionVariables():{
     (asignado=asignacion())? { //Se evalua si se esta asignando el tipo correcto al identificador
                     if(!asignado.equals("")){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
                         //System.out.println("asignado =" + asignado);
-                                  if(!TablaIdentificadores.verifiacionConToken(identificador,asignado)){
-                                      tabla.add("The token: " + asignado + " doesn't correspond to the " +
+                                  if(!TablaIdentificadores.verifiacionConToken(identificador,valorAsignado)){
+                                      tabla.add("The token: " + valorAsignado + " doesn't correspond to the " +
                                         TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
                                   }else{
                                       aux = tipoDato + " " + identificador + " = " +asignado + "\n";
@@ -927,17 +792,23 @@ void sentenciaSegun():{String ex ="";String finSegun; String finalCaso; String e
 }
 
 //Ciclo for
-void sentenciaPara():{BloqueCondicion c;String inicioPara; String ex1; String ex2;String variacion;}{
+void sentenciaPara():{BloqueCondicion c;String inicioPara; String ex1=""; String ex2;String variacion; String numVariacion;}{
 
 
         <INICIO_CICLO_PARA> {
                               inicioPara=generarEq();
                               generarLabel(inicioPara);
                             }
-        <VARIABLE>{ex1=token.image;}<ASIGNACION> ex2=tipoOperacion() {generarOperacionAsignacion(ex1,ex2);}
+        <VARIABLE>{
+                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                       tabla.add("The identifier: " + token.image + " doesn`t exist, at line: " +
+                       token.beginLine + " column:" + token.endColumn);
+                           }
+                    else{ex1=token.image;}
+                    }<ASIGNACION> ex2=tipoOperacion() {generarOperacionAsignacion(ex1,ex2);}
             <CONDICION_CICLO_PARA> c=condicion() {generarLabel(c.etqVerdad);}
-            variacion=variacionPara() ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
-            ( sentencias() )+ {agregarCodigoIntermedio("\t" + ex1 + " " + variacion + " " + "1");}
+            variacion=variacionPara() ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> ) {numVariacion=token.image;}
+            ( sentencias() )+ {agregarCodigoIntermedio("\t" + ex1 + " " + variacion + " " + numVariacion);}
             <FIN_CICLO_PARA>{generarGoto(inicioPara); generarLabel(c.etqFalso);}
 
 
@@ -956,6 +827,7 @@ void sentenciaRepetir():{ }{
 }*/
 
 //Ciclo while
+//CHECAR BUG DE VARIABLE TEMPORAL
 void sentenciaMientras():{BloqueCondicion c;String inicioWhile="";}{
 
     <INICIO_CICLO_MIENTRAS> {

@@ -2,8 +2,13 @@ Algoritmo
 
     Definir entero x =0;
 
-    Mientras x<10 + 10 Hacer
+    Definir entero a=10;
+    Definir entero b=5;
+    Definir entero y;
+
+    Mientras x<10  Hacer
         Escribir "Hola mundo";
+        y = a * b + x;
         x= 1 + x;
     FinMientras
 

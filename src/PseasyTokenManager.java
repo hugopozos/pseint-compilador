@@ -12,9 +12,12 @@ public class PseasyTokenManager implements PseasyConstants
 {
     static ArrayList<String> tabla = new ArrayList();
 
+    //Variable auxiliar para parte semantica
+    static String valorAsignado=null;
+
     //PILA DE OPERADORES
     //En esta pila iremos guardando los operadores para comprobar la jerarquia de operadores
-    static Deque<String> pila = new ArrayDeque();
+
 
    //Mapa de variable y constante
    // Aqui se guarda la relacion de variable y constante
