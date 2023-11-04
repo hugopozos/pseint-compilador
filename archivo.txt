@@ -1,7 +1,8 @@
 Algoritmo
-    definir entero x = 0;
+    definir entero a = 10;
+    definir entero b;
+    b = 10 + a;
 
-    x = 10 + 10;
 
 
 FinAlgoritmo
