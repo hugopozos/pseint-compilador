@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
 import java.util.HashMap;
-import src.TablaIdentificadores;
 
 /** Token Manager. */
 public class PseasyTokenManager implements PseasyConstants
