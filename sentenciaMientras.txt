@@ -9,6 +9,7 @@ Algoritmo
     Definir entero x;
     Definir entero z;
 
+
     Mientras y<5  Hacer
 
         x = 5 + 2;

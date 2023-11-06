@@ -1,8 +1,24 @@
 Algoritmo
+
+    #Optimizacion progacion de variables
     definir entero a = 10;
     definir entero b;
+
     b = 10 + a;
 
+    Definir entero y;
+    Definir entero x;
+    Definir entero z;
 
+    #optimizacion de reduccion de frecuencia
+    Mientras y<5  Hacer
+
+        x = 5 + 2;
+        Escribir x;
+        y = 10 * 4;
+
+        #Escribir y;
+        y= 1 + y;
+    FinMientras
 
 FinAlgoritmo

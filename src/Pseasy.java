@@ -46,7 +46,7 @@ public class Pseasy implements PseasyConstants {
                     }
                 }else{
                     System.out.println("\ncompilation generated with success");
-                    ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio);
+                    ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio); //Aqui se genera el archivo de codigo intermedio
 
 
 
@@ -60,7 +60,7 @@ public class Pseasy implements PseasyConstants {
                     //Comprobamos si en el archivo existe un ciclo while
                     //System.out.println(obtenerInicioCiclo(codigoIntermedio));
                     if(obtenerInicioCiclo(codigoIntermedio) > 0){
-                        System.out.println("Entramos al ciclo");
+                        //System.out.println("Entramos al ciclo");
                         reduccionFrecuencia(codigoIntermedio);
                     }
 
@@ -163,13 +163,14 @@ public class Pseasy implements PseasyConstants {
 
                  int index=0;
                  String tmp;
+                 //Aqui se guardan asignaciones tipo id = valor
                  HashMap<String,String>constantes = new HashMap();
                  String aux[];
                  //Recorrer el arrelgo de codigo intermedio
                  for(String codigo:codigoIntermedio){
                       //Buscar sentencia de asignacion
 
-                      aux= codigo.trim().split("=");
+                      aux= codigo.trim().split("="); //Convierte cadena de String a un arreglo
 
                       //Comprobamos que estemos usando expresiones tipo id=valor
                       if(aux.length > 1){
@@ -179,13 +180,14 @@ public class Pseasy implements PseasyConstants {
                           //System.out.println(identificador[1]);
                           constantes.put(identificador[1],aux[1]);
                       }
-
+                        //Comprobamos estructura id = valor
                       else if(codigo.trim().matches("[a-zA-Z]+_?[0-9]*=[0-9]+")) {
 
                           constantes.put(aux[0],aux[1]);// Guardamos identificador y su valor numerico
                                 //System.out.println(aux[1]);
+                      //Comprobamos si la sentencia de asignacion se este utilizando una constante ya declarada
                       }else if(!aux[1].matches("tmp[0-9]+")){
-                        //Comprobamos si la sentencia de asignacion se este utilizando una constante ya declarada
+
                             index = codigoIntermedio.indexOf(codigo);
 
                                     //aux[1]= aux[1].replace("x","10");
@@ -214,7 +216,7 @@ public class Pseasy implements PseasyConstants {
           private static void reduccionFrecuencia(ArrayList<String>codigoIntermedio){
                 //Obtenemos la sentencias que podemos quitar de nuestro ciclo while
                 ArrayList<String> sentenciasQuitarCiclo = encontrarSentenciaQuitar(codigoIntermedio);
-                System.out.println("Sentencias a quitar:"+ sentenciasQuitarCiclo.size());
+                //System.out.println("Sentencias a quitar:"+ sentenciasQuitarCiclo.size());
                 int contador = 0;
                 if(sentenciasQuitarCiclo.size()>0){
                    //Ejecutar esto depediendo de cuentas sentencias hemos encontrado
@@ -262,7 +264,7 @@ public class Pseasy implements PseasyConstants {
                 int indexFinal = condicionSentencia.indexOf("goto");
 
                 String condicion = condicionSentencia.substring(indexInicial,indexFinal);
-                System.out.println("Condicion " + condicion);
+                //System.out.println("Condicion " + condicion);
                 //Recorrer el String
                 String aux = "";
                 for(char caracter:condicion.toCharArray()){
@@ -293,7 +295,7 @@ public class Pseasy implements PseasyConstants {
                                 // que se ira cambiando a lo largo del bucle
                                 if(!c.trim().contains(encontratVariableCiclo(codigoIntermedio))){
                                         sentenciaQuitar= c;
-                                        System.out.println("Sentencia a quitar:"+ sentenciaQuitar);
+                                        //System.out.println("Sentencia a quitar:"+ sentenciaQuitar);
                                         sentenciasQuitar.add(c);
                                 }
                             }
@@ -303,7 +305,7 @@ public class Pseasy implements PseasyConstants {
                                 //Podemos quitarla de nuestro ciclo
                                 if(!c.trim().contains(encontratVariableCiclo(codigoIntermedio))){
                                     sentenciaQuitar= c;
-                                    System.out.println("Sentencia a quitar:"+ sentenciaQuitar);
+                                    //System.out.println("Sentencia a quitar:"+ sentenciaQuitar);
                                     sentenciasQuitar.add(c);
                                 }
                             }
@@ -316,7 +318,7 @@ public class Pseasy implements PseasyConstants {
                        int index=obtenerInicioCiclo(codigoIntermedio);
 
 
-                        System.out.println("Ciclo inicio:"+ index);
+                        //System.out.println("Ciclo inicio:"+ index);
                         //Obtenemos la etiqueta de cierre del bucle
                         String etqFinCiclo = codigoIntermedio.get(index).trim().substring(9);
                         //System.out.println(etqFinCiclo);
@@ -329,7 +331,7 @@ public class Pseasy implements PseasyConstants {
                                     continue;
                                 }else if(codigo.trim().contains(etqFinCiclo)){indexFinal=codigoIntermedio.indexOf(codigo);}
                         }
-                        System.out.println("Ciclo final:"+ indexFinal);
+                        //System.out.println("Ciclo final:"+ indexFinal);
 
                         //Obtener un sub arreglo que contenga solo la parte del arreglo
 
@@ -1245,17 +1247,17 @@ void sentenciaRepetir():{ }{
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_3_2() {
-    if (jj_scan_token(ESCRIBIR)) return true;
-    if (jj_scan_token(CADENA_TEXTO)) return true;
-    if (jj_scan_token(COMA)) return true;
-    return false;
-  }
-
   private boolean jj_3_1() {
     if (jj_scan_token(ESCRIBIR)) return true;
     if (jj_scan_token(CADENA_TEXTO)) return true;
     if (jj_scan_token(DELIMITADOR)) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_scan_token(ESCRIBIR)) return true;
+    if (jj_scan_token(CADENA_TEXTO)) return true;
+    if (jj_scan_token(COMA)) return true;
     return false;
   }
 
@@ -1560,7 +1562,7 @@ void sentenciaRepetir():{ }{
 class ArchivoCodigoIntermedio {
 
     public static void escribirArchivo(ArrayList<String>codigoIntermedio){
-        String fileName = "codigoIntermedio\\codigo_intermedio.txt";
+        String fileName = "codigo_intermedio.txt";
         File archivo = new File(fileName);
         try{
             PrintWriter salida = new PrintWriter(archivo);
@@ -1579,7 +1581,7 @@ class ArchivoCodigoIntermedio {
 //CLASE PARA GENERAR EL ARCHIVO OPTIMIZADO DE CODIGO INTERMEDIO
 class ArchivoOptimizado{
     public static void escribirArchivo(ArrayList<String>codigoOptimizado){
-        String fileName = "codigoIntermedio\\codigo_optimizado.txt";
+        String fileName = "codigo_optimizado.txt";
                 File archivo = new File(fileName);
                 try{
                     PrintWriter salida = new PrintWriter(archivo);
