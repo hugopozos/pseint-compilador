@@ -1,9 +1,2 @@
-entero n
-read nwh:label etq1
-	if n>0 goto etq2
-	goto etq3
-label etq2
-tmp1=n-1
-n=tmp1
-	goto etq1
-label etq3
+entero x=5
+ wrt x

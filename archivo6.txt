@@ -1,0 +1,61 @@
+Algoritmo
+    definir entero n1;
+    definir entero n2;
+    definir entero n3;
+
+    definir entero max = 0;
+    definir entero min = 0;
+    definir entero medio = 0;
+
+    Escribir "Ingrese el primer numero:";
+    Leer n1;
+
+    Escribir "Ingrese el segundo numero:";
+    Leer n2;
+
+    Escribir "Ingrese el tercer numero:";
+    Leer n3;
+
+    #Comprobamos que el numero 1 es mayor
+    Si n1 > n2 && n1 > n3 entonces #1
+        max = n1;
+        #Obtener el numero de en medio
+        Si n2 > n3 entonces #2
+           medio = n2;
+           min = n3;
+        Sino
+            medio = n3;
+            min = n2;
+        FinSi #2
+    Sino
+        Si n2 > n1 && n2 > n3 entonces #3
+            max = n2;
+            #Obtener el numero de en medio
+                Si n1 > n3 entonces
+                    medio = n1;
+                    min = n3;
+                Sino
+                    medio = n3;
+                    min = n1;
+                FinSi
+        Sino
+            Si n3 > n1 && n3 > n2 entonces
+            max = n3;
+                Si n1 > n2 entonces
+                    medio = n1;
+                    min = n2;
+                Sino
+                    medio = n2;
+                    min = n1;
+                FinSi
+            # en dado caso que sean iguales
+            Sino
+                Escribir "Los tres numeros son iguales";
+            FinSi
+        FinSi
+    FinSi #1
+
+     Escribir "El mayor es: " << max;
+     Escribir "El de enmedio es: " << medio;
+     Escribir "El menor es: " << min;
+FinAlgoritmo

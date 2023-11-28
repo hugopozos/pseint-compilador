@@ -4,8 +4,6 @@ __ZStL19piecewise_construct:
 	.space 1
 .lcomm __ZStL8__ioinit,1,1
 	.def	___main;	.scl	2;	.type	32;	.endef
-LC0:
-	.ascii "Ingrese numero:\0"
 	.text
 	.globl	_main
 	.def	_main;	.scl	2;	.type	32;	.endef
@@ -23,22 +21,7 @@ LFB1445:
 	.cfi_escape 0xf,0x3,0x75,0x7c,0x6
 	subl	$36, %esp
 	call	___main
-	movl	$LC0, 4(%esp)
-	movl	$__ZSt4cout, (%esp)
-	call	__ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc
-	movl	$__ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_, (%esp)
-	movl	%eax, %ecx
-	call	__ZNSolsEPFRSoS_E
-	subl	$4, %esp
-	leal	-12(%ebp), %eax
-	movl	%eax, (%esp)
-	movl	$__ZSt3cin, %ecx
-	call	__ZNSirsERi
-	subl	$4, %esp
-L3:
-	movl	-12(%ebp), %eax
-	testl	%eax, %eax
-	jle	L2
+	movl	$5, -12(%ebp)
 	movl	-12(%ebp), %eax
 	movl	%eax, (%esp)
 	movl	$__ZSt4cout, %ecx
@@ -48,11 +31,6 @@ L3:
 	movl	%eax, %ecx
 	call	__ZNSolsEPFRSoS_E
 	subl	$4, %esp
-	movl	-12(%ebp), %eax
-	subl	$1, %eax
-	movl	%eax, -12(%ebp)
-	jmp	L3
-L2:
 	movl	$0, %eax
 	movl	-4(%ebp), %ecx
 	.cfi_def_cfa 1, 0
@@ -65,7 +43,7 @@ L2:
 LFE1445:
 	.def	___tcf_0;	.scl	3;	.type	32;	.endef
 ___tcf_0:
-LFB1878:
+LFB1875:
 	.cfi_startproc
 	pushl	%ebp
 	.cfi_def_cfa_offset 8
@@ -80,10 +58,10 @@ LFB1878:
 	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
-LFE1878:
+LFE1875:
 	.def	__Z41__static_initialization_and_destruction_0ii;	.scl	3;	.type	32;	.endef
 __Z41__static_initialization_and_destruction_0ii:
-LFB1877:
+LFB1874:
 	.cfi_startproc
 	pushl	%ebp
 	.cfi_def_cfa_offset 8
@@ -92,24 +70,24 @@ LFB1877:
 	.cfi_def_cfa_register 5
 	subl	$24, %esp
 	cmpl	$1, 8(%ebp)
-	jne	L8
+	jne	L6
 	cmpl	$65535, 12(%ebp)
-	jne	L8
+	jne	L6
 	movl	$__ZStL8__ioinit, %ecx
 	call	__ZNSt8ios_base4InitC1Ev
 	movl	$___tcf_0, (%esp)
 	call	_atexit
-L8:
+L6:
 	nop
 	leave
 	.cfi_restore 5
 	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
-LFE1877:
+LFE1874:
 	.def	__GLOBAL__sub_I_main;	.scl	3;	.type	32;	.endef
 __GLOBAL__sub_I_main:
-LFB1879:
+LFB1876:
 	.cfi_startproc
 	pushl	%ebp
 	.cfi_def_cfa_offset 8
@@ -125,16 +103,14 @@ LFB1879:
 	.cfi_def_cfa 4, 4
 	ret
 	.cfi_endproc
-LFE1879:
+LFE1876:
 	.section	.ctors,"w"
 	.align 4
 	.long	__GLOBAL__sub_I_main
 	.ident	"GCC: (MinGW.org GCC-6.3.0-1) 6.3.0"
-	.def	__ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc;	.scl	2;	.type	32;	.endef
+	.def	__ZNSolsEi;	.scl	2;	.type	32;	.endef
 	.def	__ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_;	.scl	2;	.type	32;	.endef
 	.def	__ZNSolsEPFRSoS_E;	.scl	2;	.type	32;	.endef
-	.def	__ZNSirsERi;	.scl	2;	.type	32;	.endef
-	.def	__ZNSolsEi;	.scl	2;	.type	32;	.endef
 	.def	__ZNSt8ios_base4InitD1Ev;	.scl	2;	.type	32;	.endef
 	.def	__ZNSt8ios_base4InitC1Ev;	.scl	2;	.type	32;	.endef
 	.def	_atexit;	.scl	2;	.type	32;	.endef

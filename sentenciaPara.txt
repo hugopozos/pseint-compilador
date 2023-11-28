@@ -2,7 +2,7 @@ Algoritmo
     definir entero x;
 
 
-    Para x = 0 Hasta que x < 10 incremento 1
+    Para x = 0 Hasta que x < 10
          Escribir x;
      FinPara
 

@@ -1,0 +1,4 @@
+Algoritmo
+    definir entero x=5;
+    escribir x;
+FinAlgoritmo

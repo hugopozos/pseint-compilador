@@ -52,11 +52,16 @@ public class Pseasy {
                     //Eliminar el archivo
                     if(CodigoObjeto.f.exists()){CodigoObjeto.f.delete();}
 
+                    //Funcion para eliminar archivos
+                    eliminarArchivos("codigoObjeto.s");
+                    eliminarArchivos("programa.exe");
+
                     System.out.println("PROGRAM ERRORS");
                     System.out.println("=================");
                     for(String i:tabla){
                         System.out.println(i);
                     }
+
                 }else{
                     System.out.println("\ncompilation generated with success");
                     ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio); //Aqui se genera el archivo de codigo intermedio
@@ -90,12 +95,28 @@ public class Pseasy {
               }
           }
 
+          //Funcion para eliminar archivos
+            private static void eliminarArchivos(String nombreArchivo){
+                String directorio = "C:/Users/gonza/compilador/";
 
+                File directorioFile = new File(directorio);
+
+                //Lista de archivos en el directorio
+                File[] archivos = directorioFile.listFiles();
+                if(archivos != null){
+                    for(File archivo:archivos){
+                        if(archivo.getName().equals(nombreArchivo)){System.out.println("existe el archivo");archivo.delete();}
+                    }
+                }
+              }
 
           //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
           private static void agregarCodigoIntermedio(String codigo){
             codigoIntermedio.add(codigo);
           }
+
+
+
 
           private static String generarTmp(){
             tmpContador++;
@@ -528,6 +549,7 @@ class TablaIdentificadores {
             }
     }
 }
+//Clase que se utiliza para la generacion de codigo objeto
 class CodigoObjeto{
     static File f;
 
@@ -1063,11 +1085,11 @@ void leerDato():{String leer; String variable = "";}{
 }
 
 /*SE MODIFICIARON LA SENTENCIA IMPRIMIR*/
-void imprimir():{String texto; String variable;}{
+void imprimir():{String texto;}{
 
 
     try{
-    <ESCRIBIR> {CodigoObjeto.EscribirCod("cout << ");} datoImprimir()
+    <ESCRIBIR> {CodigoObjeto.EscribirCod("cout << ");} texto=datoImprimir() {agregarCodigoIntermedio(" wrt " + texto + "\n");}
     /*
         LOOKAHEAD(3)<ESCRIBIR>{CodigoObjeto.EscribirCod("cout << ");}<CADENA_TEXTO>{texto=token.image;CodigoObjeto.EscribirCod(token.image + " << ");} <DELIMITADOR> {agregarCodigoIntermedio("\tEscribir " + texto + "\n");CodigoObjeto.EscribirCod("endl;\n");}
         |LOOKAHEAD(3)<ESCRIBIR>{CodigoObjeto.EscribirCod("cout << ");}<CADENA_TEXTO>{texto=token.image;CodigoObjeto.EscribirCod(token.image + " << ");}<COMA><VARIABLE>{variable=token.image;CodigoObjeto.EscribirCod(token.image + " << ");}<DELIMITADOR>{agregarCodigoIntermedio("\tEscribir " + texto +"," + variable + "\n" ); CodigoObjeto.EscribirCod("endl;\n");}
@@ -1085,10 +1107,19 @@ void imprimir():{String texto; String variable;}{
     //<ESCRIBIR> ( constantes() | <VARIABLE> ) <DELIMITADOR>
 }
 //Se agreggo un simbolo de concatenacion, el cual es <<
-void datoImprimir():{}{
+String datoImprimir():{String valor="";}{
 
-    constantes() concatenarValores()
-    | <VARIABLE>{CodigoObjeto.EscribirCod(token.image +" ");} concatenarValores()
+    (valor=constantes() concatenarValores()
+    | <VARIABLE>{
+            if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                    tabla.add("The identifier: " + token.image + " doesn't exists, at line: " + token.beginLine + " column:" + token.endColumn);
+            }else{
+                valor = token.image;
+                CodigoObjeto.EscribirCod(token.image +" ");
+            }
+            //CodigoObjeto.EscribirCod(token.image +" ");
+        }
+    concatenarValores()) {return valor;}
 
     //( <CONCATENACION> {CodigoObjeto.EscribirCod(token.image +" ");} datoImprimir())*
 }
@@ -1171,17 +1202,13 @@ void sentenciaSi():{BloqueCondicion c; String etqFinSi;}{
             generarLabel(c.etqFalso);
             CodigoObjeto.EscribirCod("}");
         }
-            [ <CONDICIONAL_SINO> {CodigoObjeto.EscribirCod(" else {\n");} ( sentencias() )+]
+            [ <CONDICIONAL_SINO> {CodigoObjeto.EscribirCod(" else {\n");} ( sentencias() )+ { CodigoObjeto.EscribirCod("}");}]
              <FIN_CONDICIONAL_SI> {
-                CodigoObjeto.EscribirCod(" }\n");
+
              generarLabel(etqFinSi);
              }
     }catch(ParseException e){
-        Token t;
-        do{
-            t=getNextToken();
-        }while(t.kind != EOF);
-        tabla.add("Parser error:" + e.getMessage());
+        tabla.add("Parser error:" + "Control structure closing word not found " + "at line " + token.beginLine + " column " + token.beginColumn );
     }
 
 }
@@ -1258,7 +1285,7 @@ void sentenciaRepetir():{ }{
 
 //Ciclo while
 void sentenciaMientras():{BloqueCondicion c;String inicioWhile="";}{
-
+    try{
     <INICIO_CICLO_MIENTRAS> {
                                 inicioWhile=generarEq();
                                generarLabel("wh",inicioWhile);
@@ -1267,6 +1294,10 @@ void sentenciaMientras():{BloqueCondicion c;String inicioWhile="";}{
     c=condicion() <HACER> {generarLabel(c.etqVerdad); CodigoObjeto.EscribirCod("){\n");}
     ( sentencias() )+
     <FIN_CICLO_MIENTRAS> {generarGoto(inicioWhile); generarLabel(c.etqFalso);CodigoObjeto.EscribirCod("}\n");}
+    }catch(ParseException e){
+        tabla.add("Parser error:" + "Control structure closing word not found " + "at line " + token.beginLine + " column " + token.beginColumn );
+
+        }
 }
 
 

@@ -34,7 +34,7 @@ public class Pseasy implements PseasyConstants {
         //-------------------- CODIGO OBJETO -------------------------------
         //Archivo donde se guarda el codigo a ejecutar
         CodigoObjeto objeto = new CodigoObjeto("codigoObjeto.cpp");
-        static String comandos = "cmd /k start C:/Users/gonza/compilador/ejecucion.bat";
+        static String comandos = "cmd /k start C:/Users/gonza/compilador/ejecucion.bat"; // << Cambiar la ruta por: C:/compilador/ejecucion.bat
 
         public static void main(String[] args) {
             try{
@@ -44,11 +44,17 @@ public class Pseasy implements PseasyConstants {
                 if(tabla.size() != 0){
                     //Eliminar el archivo
                     if(CodigoObjeto.f.exists()){CodigoObjeto.f.delete();}
+
+                    //Funcion para eliminar archivos
+                    eliminarArchivos("codigoObjeto.s");
+                    eliminarArchivos("programa.exe");
+
                     System.out.println("PROGRAM ERRORS");
                     System.out.println("=================");
                     for(String i:tabla){
                         System.out.println(i);
                     }
+
                 }else{
                     System.out.println("\ncompilation generated with success");
                     ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio); //Aqui se genera el archivo de codigo intermedio
@@ -82,12 +88,28 @@ public class Pseasy implements PseasyConstants {
               }
           }
 
+          //Funcion para eliminar archivos
+            private static void eliminarArchivos(String nombreArchivo){
+                String directorio = "C:/Users/gonza/compilador/";
 
+                File directorioFile = new File(directorio);
+
+                //Lista de archivos en el directorio
+                File[] archivos = directorioFile.listFiles();
+                if(archivos != null){
+                    for(File archivo:archivos){
+                        if(archivo.getName().equals(nombreArchivo)){System.out.println("existe el archivo");archivo.delete();}
+                    }
+                }
+              }
 
           //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
           private static void agregarCodigoIntermedio(String codigo){
             codigoIntermedio.add(codigo);
           }
+
+
+
 
           private static String generarTmp(){
             tmpContador++;
@@ -807,11 +829,12 @@ void operadores():{}{
 
 /*SE MODIFICIARON LA SENTENCIA IMPRIMIR*/
   final public void imprimir() throws ParseException {
-                 String texto; String variable;
+                 String texto;
     try {
       jj_consume_token(ESCRIBIR);
                 CodigoObjeto.EscribirCod("cout << ");
-      datoImprimir();
+      texto = datoImprimir();
+                                                                             agregarCodigoIntermedio(" wrt " + texto + "\n");
     } catch (ParseException e) {
         Token t;
         do{
@@ -822,19 +845,27 @@ void operadores():{}{
   }
 
 //Se agreggo un simbolo de concatenacion, el cual es <<
-  final public void datoImprimir() throws ParseException {
+  final public String datoImprimir() throws ParseException {
+                       String valor="";
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case CADENA_TEXTO:
     case NUMERO_ENTERO:
     case NUMERO_DECIMAL:
     case BOOLEANO_FALSO:
     case BOOLEANO_VERDADERO:
-      constantes();
+      valor = constantes();
       concatenarValores();
       break;
     case VARIABLE:
       jj_consume_token(VARIABLE);
-                 CodigoObjeto.EscribirCod(token.image +" ");
+            if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                    tabla.add("The identifier: " + token.image + " doesn't exists, at line: " + token.beginLine + " column:" + token.endColumn);
+            }else{
+                valor = token.image;
+                CodigoObjeto.EscribirCod(token.image +" ");
+            }
+            //CodigoObjeto.EscribirCod(token.image +" ");
+
       concatenarValores();
       break;
     default:
@@ -842,6 +873,8 @@ void operadores():{}{
       jj_consume_token(-1);
       throw new ParseException();
     }
+                          {if (true) return valor;}
+    throw new Error("Missing return statement in function");
   }
 
   final public void concatenarValores() throws ParseException {
@@ -1067,20 +1100,16 @@ void operadores():{}{
             break label_9;
           }
         }
+                                                                                              CodigoObjeto.EscribirCod("}");
         break;
       default:
         jj_la1[22] = jj_gen;
         ;
       }
       jj_consume_token(FIN_CONDICIONAL_SI);
-                CodigoObjeto.EscribirCod(" }\n");
              generarLabel(etqFinSi);
     } catch (ParseException e) {
-        Token t;
-        do{
-            t=getNextToken();
-        }while(t.kind != EOF);
-        tabla.add("Parser error:" + e.getMessage());
+        tabla.add("Parser error:" + "Control structure closing word not found " + "at line " + token.beginLine + " column " + token.beginColumn );
     }
   }
 
@@ -1264,34 +1293,38 @@ void sentenciaRepetir():{ }{
 //Ciclo while
   final public void sentenciaMientras() throws ParseException {
                           BloqueCondicion c;String inicioWhile="";
-    jj_consume_token(INICIO_CICLO_MIENTRAS);
+    try {
+      jj_consume_token(INICIO_CICLO_MIENTRAS);
                                 inicioWhile=generarEq();
                                generarLabel("wh",inicioWhile);
                                CodigoObjeto.EscribirCod("while ( ");
-    c = condicion();
-    jj_consume_token(HACER);
+      c = condicion();
+      jj_consume_token(HACER);
                            generarLabel(c.etqVerdad); CodigoObjeto.EscribirCod("){\n");
-    label_14:
-    while (true) {
-      sentencias();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LEER:
-      case ESCRIBIR:
-      case DEFINIR:
-      case INICIO_CICLO_PARA:
-      case INICIO_CICLO_MIENTRAS:
-      case INICIO_CONDICIONAL_SI:
-      case INICIO_CONDICIONAL_SEGUN:
-      case VARIABLE:
-        ;
-        break;
-      default:
-        jj_la1[30] = jj_gen;
-        break label_14;
+      label_14:
+      while (true) {
+        sentencias();
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case LEER:
+        case ESCRIBIR:
+        case DEFINIR:
+        case INICIO_CICLO_PARA:
+        case INICIO_CICLO_MIENTRAS:
+        case INICIO_CONDICIONAL_SI:
+        case INICIO_CONDICIONAL_SEGUN:
+        case VARIABLE:
+          ;
+          break;
+        default:
+          jj_la1[30] = jj_gen;
+          break label_14;
+        }
       }
-    }
-    jj_consume_token(FIN_CICLO_MIENTRAS);
+      jj_consume_token(FIN_CICLO_MIENTRAS);
                           generarGoto(inicioWhile); generarLabel(c.etqFalso);CodigoObjeto.EscribirCod("}\n");
+    } catch (ParseException e) {
+        tabla.add("Parser error:" + "Control structure closing word not found " + "at line " + token.beginLine + " column " + token.beginColumn );
+    }
   }
 
   /** Generated Token Manager. */
@@ -1649,6 +1682,7 @@ class TablaIdentificadores {
             }
     }
 }
+//Clase que se utiliza para la generacion de codigo objeto
 class CodigoObjeto{
     static File f;
 
