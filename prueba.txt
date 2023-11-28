@@ -1,0 +1,11 @@
+Algoritmo
+    definir entero n1;
+    definir entero n2;
+    n1=1;
+    n2=5;
+   Si n1 < n2 entonces
+    Escribir " el resultado es:";
+  Sino
+  Escribir " el resultado es nulo";
+  FinSi
+FinAlgoritmo

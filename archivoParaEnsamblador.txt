@@ -1,0 +1,9 @@
+Algoritmo
+
+ Si 10 < 2000 entonces
+       Escribir "el primer numero es menor";
+    sino
+        Escribir "el primer numero es mayor";
+    FinSi
+
+FinAlgoritmoº

@@ -1,0 +1,40 @@
+.model small                          
+.stack
+.data
+    mensaje1 db 13,10, 'A > B $' 
+    mensaje2 db 13,10, 'A < B $' 
+.code 
+
+inicio:
+    mov ax, @data 
+    mov ds, ax     
+    mov ax, 20h 
+    mov bx, 200h 
+ 
+    cmp ax, bx 
+    jg esMayor 
+    jl esMenor   
+    
+esMayor:
+    lea dx, mensaje1 
+    call imprimir    
+    jmp finalizar   
+    
+esMenor:
+    lea dx, mensaje2 
+    call imprimir    
+    jmp finalizar   
+      
+   
+    imprimir:  
+    mov ah, 9h 
+    int 21h    
+    ret        
+    
+    finalizar:  
+    mov ah, 4ch 
+    int 21h     
+    
+    
+end 
+

@@ -1,24 +1,20 @@
 Algoritmo
 
-    #Optimizacion progacion de variables
-    definir entero a = 10;
-    definir entero b;
+    #Compara si un numero es mayor al otro
 
-    b = 10 + a;
+    definir entero x;
+    definir entero y;
 
-    Definir entero y;
-    Definir entero x;
-    Definir entero z;
+    Escribir "Ingrese un numero" ;
+    leer x;
 
-    #optimizacion de reduccion de frecuencia
-    Mientras y<5  Hacer
+    Escribir "Ingrese otro numero";
+    leer y;
 
-        x = 5 + 2;
-        Escribir x;
-        y = 10 * 4;
-
-        #Escribir y;
-        y= 1 + y;
-    FinMientras
+    Si x < y entonces
+        escribir "El numero " << x << " es menor";
+    Sino
+        escribir "El numero " << x << " es mayor";
+    FinSi
 
 FinAlgoritmo

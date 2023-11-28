@@ -1,8 +1,10 @@
 Algoritmo
-    Definir entero x=5;
 
-    Si x < 18 entonces
-       Escribir "Eres menor de edad";
+
+    Si 10 < 2000 entonces
+       Escribir "el primer numero es menor";
+    sino
+        Escribir "el segundo numero es mayor";
     FinSi
 
 FinAlgoritmo

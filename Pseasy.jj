@@ -1,0 +1,1280 @@
+
+options {
+    STATIC = false;
+    //**AGREGUE UNA OPCION QUE ME PERMITE NO TOMARLE IMPORTANCIA MAYUSCULAS Y MINUSCULAS
+    IGNORE_CASE = true;
+}
+
+PARSER_BEGIN(Pseasy)
+import java.util.ArrayList;
+import java.util.List;
+import java.io.*;
+import java.util.HashMap;
+public class Pseasy {
+
+
+        static ArrayList<String> tabla = PseasyTokenManager.tabla;
+
+        //Variable para guardar el elemento asignado
+        static String valorAsignado = null;
+
+        //Arreglo para guardar lo generado por el codigo intermedio
+        static ArrayList<String> codigoIntermedio = new ArrayList();
+
+        //Arreglo para guardar variables temporales
+        static ArrayList<String> listaTemporales = new ArrayList();
+
+
+
+        //Mapa que guarda las constantes del programa
+        static HashMap<String,String> constantes = PseasyTokenManager.constantes;
+
+
+
+        //Variables para generacion de codigo intermedio
+        private static int tmpContador = 0;
+        private static int etContador = 0;
+
+        //Sentencias a quitar (optimizacion de ciclos)
+        private static int numSentencia = 0;
+
+        //-------------------- CODIGO OBJETO -------------------------------
+        //Archivo donde se guarda el codigo a ejecutar
+        CodigoObjeto objeto = new CodigoObjeto("codigoObjeto.cpp");
+        static String comandos = "cmd /k start C:/Users/gonza/compilador/ejecucion.bat"; // << Cambiar la ruta por: C:/compilador/ejecucion.bat
+
+        public static void main(String[] args) {
+            try{
+                Pseasy pseasy = new Pseasy(System.in);
+                pseasy.programa();
+
+                if(tabla.size() != 0){
+                    //Eliminar el archivo
+                    if(CodigoObjeto.f.exists()){CodigoObjeto.f.delete();}
+
+                    System.out.println("PROGRAM ERRORS");
+                    System.out.println("=================");
+                    for(String i:tabla){
+                        System.out.println(i);
+                    }
+                }else{
+                    System.out.println("\ncompilation generated with success");
+                    ArchivoCodigoIntermedio.escribirArchivo(codigoIntermedio); //Aqui se genera el archivo de codigo intermedio
+
+
+
+
+                    //CODIGO OPTIMIZADO
+                    //Optimizacion local
+                    progacionConstantes(codigoIntermedio);
+
+                    //Optimizacion de ciclos
+                    //Loop Unrolling (Expansion de bucles) - Eliminar o reducir el numero de iteraciones
+                    //Comprobamos si en el archivo existe un ciclo while
+                    //System.out.println(obtenerInicioCiclo(codigoIntermedio));
+                    if(obtenerInicioCiclo(codigoIntermedio) > 0){
+                        //System.out.println("Entramos al ciclo");
+                        reduccionFrecuencia(codigoIntermedio);
+                    }
+
+
+                    ArchivoOptimizado.escribirArchivo(codigoIntermedio);
+
+                    //Generacion de codigo objeto
+                        CodigoObjeto.sentenciaFinal();
+                        Runtime.getRuntime().exec(comandos);
+
+                }
+              }catch(Exception e){
+                System.out.println(e.getMessage());
+              }
+          }
+
+
+
+          //METODOS PARA LA GENERACION DE CODIGO INTERMEDIO
+          private static void agregarCodigoIntermedio(String codigo){
+            codigoIntermedio.add(codigo);
+          }
+
+          private static String generarTmp(){
+            tmpContador++;
+            String aux= "tmp" + tmpContador;
+            listaTemporales.add(aux);
+            return aux;
+          }
+          private static String generarEq(){
+            etContador++;
+            return "etq"+etContador;
+          }
+          private static class BloqueCondicion{
+            String etqVerdad,etqFalso;
+          }
+
+          //Obtiene el ultimo elemento en nuestra lista de variables temporales
+          private static String obtenerUltimoTmp(){
+            if(listaTemporales.size() > 0)
+            {
+                int indexUltimo = listaTemporales.size() -1;
+                return listaTemporales.get(indexUltimo);
+            }
+                return null;
+          }
+
+          //Eliminar lista de temporales
+          private static void limpiarTemporales(){
+            if(listaTemporales.size() > 0){
+                listaTemporales.clear();
+            }
+          }
+
+          private static void generarOperacionAsignacion(String id, String exp){
+            String tmp = id +"=" + exp + "\n";
+            codigoIntermedio.add(tmp);
+          }
+
+
+
+          private static String generarOperacionAritmetica(String op,String ex1, String ex2){
+
+                String aux = generarTmp();
+                String cI = aux + "=" + ex1 + op + ex2 + "\n";
+                codigoIntermedio.add(cI);
+                return aux;
+          }
+
+          //METODOS PARA GENERAR EL CODIGO INTERMEDIO EN CONDICIONES
+          private static void generarLabel( String label){
+            codigoIntermedio.add("label " + label + "\n");
+          }
+          private static void generarLabel(String tipo, String label){
+            codigoIntermedio.add(tipo +":"+ "label " + label + "\n");
+          }
+          private static void generarGoto(String label){
+            codigoIntermedio.add("\tgoto " + label + "\n");
+          }
+
+          private BloqueCondicion generarOperacionRelacional(String e1, String e2, String op){
+            BloqueCondicion bloque = new BloqueCondicion();
+            bloque.etqVerdad = generarEq();
+            bloque.etqFalso = generarEq();
+            codigoIntermedio.add("\tif " +e1 +op +e2 +" goto "+bloque.etqVerdad + "\n");
+            generarGoto(bloque.etqFalso);
+            return bloque;
+          }
+
+          private static void interCondicion(BloqueCondicion bloque){
+            String aux = bloque.etqVerdad;
+            bloque.etqVerdad = bloque.etqFalso;
+            bloque.etqFalso = aux;
+          }
+
+          // METODOS PARA LA OPTIMIZACION DE CODIGO INTERMEDIO
+          //Optimizacion local
+          private static void progacionConstantes(ArrayList<String>codigoIntermedio){
+
+                 int index=0;
+                 String tmp;
+                 //Aqui se guardan asignaciones tipo id = valor
+                 HashMap<String,String>constantes = new HashMap();
+                 String aux[];
+                 //Recorrer el arrelgo de codigo intermedio
+                 for(String codigo:codigoIntermedio){
+                      //Buscar sentencia de asignacion
+
+                      aux= codigo.trim().split("="); //Convierte cadena de String a un arreglo
+
+                      //Comprobamos que estemos usando expresiones tipo id=valor
+                      if(aux.length > 1){
+                      //Comprobar si tenemos la estructura tipoDato id = valor
+                      if(codigo.trim().matches("(entero|flotante|booleano|cadena) [a-zA-Z]+_?[0-9]*=[0-9]+")){
+                          String identificador[] = aux[0].split(" "); //Separamos la cadena tipoDato id
+                          //System.out.println(identificador[1]);
+                          constantes.put(identificador[1],aux[1]);
+                      }
+                        //Comprobamos estructura id = valor
+                      else if(codigo.trim().matches("[a-zA-Z]+_?[0-9]*=[0-9]+")) {
+
+                          constantes.put(aux[0],aux[1]);// Guardamos identificador y su valor numerico
+                                //System.out.println(aux[1]);
+                      //Comprobamos si la sentencia de asignacion se este utilizando una constante ya declarada
+                      }else if(!aux[1].matches("tmp[0-9]+")){
+
+                            index = codigoIntermedio.indexOf(codigo);
+
+                                    //aux[1]= aux[1].replace("x","10");
+                                    aux[1]= encontrarId(aux[1],constantes);
+                                    tmp  =  aux[0] + "=" + aux[1] + "\n";
+                                   codigoIntermedio.set(index,tmp);
+
+                                //System.out.println(aux[1]);
+                       }
+                      }
+                    }
+                 }
+
+
+          private static String encontrarId(String asignacion,HashMap<String,String> constantes){
+            String res=asignacion;
+                for(String constante:constantes.keySet()){
+                    if(res.contains(constante)){
+                        res = res.replace(constante,constantes.get(constante));
+                    }
+                }
+                return res;
+          }
+
+          //OPTIMIZACION DE BUCLES
+          private static void reduccionFrecuencia(ArrayList<String>codigoIntermedio){
+                //Obtenemos la sentencias que podemos quitar de nuestro ciclo while
+                ArrayList<String> sentenciasQuitarCiclo = encontrarSentenciaQuitar(codigoIntermedio);
+                //System.out.println("Sentencias a quitar:"+ sentenciasQuitarCiclo.size());
+                int contador = 0;
+                if(sentenciasQuitarCiclo.size()>0){
+                   //Ejecutar esto depediendo de cuentas sentencias hemos encontrado
+                   //Obtenemos el indice en donde inicia el ciclo
+                   int indexInicioCiclo = obtenerInicioCiclo(codigoIntermedio);
+
+                   for(String c:sentenciasQuitarCiclo){
+                       //Quitamos la sentencia de nuestro ciclo
+                      codigoIntermedio.remove(c);
+
+                      //La colocamos antes de inicio del ciclo
+                      codigoIntermedio.add(indexInicioCiclo+contador,c);
+                      contador++;
+                   }
+
+                }
+
+
+
+
+
+          }
+          private static int obtenerInicioCiclo(ArrayList<String>codigoIntermedio){
+            //Obtenemos el indice donde empieza el bucle while
+            int index=0;
+            for(String codigo:codigoIntermedio){
+                if(codigo.trim().contains("wh:")){
+                    index = codigoIntermedio.indexOf(codigo);
+                    break;
+                }
+            }
+            return index;
+          }
+
+          //Este metodo encuentra las variables que cambian en cada iteracion del ciclo
+          private static String encontratVariableCiclo(ArrayList<String>codigoIntermedio){
+                String variableCiclo = "";
+                int indexInicioCiclo = obtenerInicioCiclo(codigoIntermedio);
+
+                //Obtener la condicion que tiene la variable que ira cambiando
+                String condicionSentencia = codigoIntermedio.get(indexInicioCiclo+1);
+
+                //Extraemos la variable que ira cambiando a lo largo del ciclo
+                int indexInicial = condicionSentencia.indexOf("if") + 3; //Posicion del if
+                int indexFinal = condicionSentencia.indexOf("goto");
+
+                String condicion = condicionSentencia.substring(indexInicial,indexFinal);
+                //System.out.println("Condicion " + condicion);
+                //Recorrer el String
+                String aux = "";
+                for(char caracter:condicion.toCharArray()){
+                        aux = String.valueOf(caracter); //Lo convertimos a un caracter para poder aplicar una expresion regular
+                        //Identificar si un identificador: [a-zA-Z]+_?[0-9]*
+                        if(aux.matches("[a-zA-Z]+_?[0-9]*"))
+                        {
+                            variableCiclo=aux;
+                        }
+                }
+                //System.out.println("variable ciclo " + variableCiclo);
+
+                return variableCiclo;
+          }
+
+          private static ArrayList<String> encontrarSentenciaQuitar(ArrayList<String>codigoIntermedio){
+            ArrayList<String> sentenciasQuitar = new ArrayList();
+            //Obtenemos la seccion donde se encuentra nuestro ciclo while
+                        List<String> ciclo =  encontrarCiclo(codigoIntermedio);
+
+                        String sentenciaQuitar = ""; //Se guarda la sentencia que deseamos quitar de nuestro arreglo
+                        for(String c:ciclo){
+                            //Nos enfocamos en aquellas sentencias donde se asigne un valor a una variable temporal
+                            if(c.trim().matches("tmp[0-9]+=.+")){
+
+
+                                //Se compara la sentencia de asignacion de variable temporal no usa la variable
+                                // que se ira cambiando a lo largo del bucle
+                                if(!c.trim().contains(encontratVariableCiclo(codigoIntermedio))){
+                                        sentenciaQuitar= c;
+                                        //System.out.println("Sentencia a quitar:"+ sentenciaQuitar);
+                                        sentenciasQuitar.add(c);
+                                }
+                            }
+                            //Nos enfocamos en las sentencias de asignacion a una variable no temporal
+                            else if(c.trim().matches("[a-zA-Z]+_?[0-9]*=.+")){
+                                //Si esa variable que queremos asignar no es una variable dinamica
+                                //Podemos quitarla de nuestro ciclo
+                                if(!c.trim().contains(encontratVariableCiclo(codigoIntermedio))){
+                                    sentenciaQuitar= c;
+                                    //System.out.println("Sentencia a quitar:"+ sentenciaQuitar);
+                                    sentenciasQuitar.add(c);
+                                }
+                            }
+                        }
+                        return sentenciasQuitar;
+          }
+
+          private static List<String> encontrarCiclo(ArrayList<String>codigoIntermedio){
+            //Obtenemos el indice donde empieza el bucle while
+                       int index=obtenerInicioCiclo(codigoIntermedio);
+
+
+                        //System.out.println("Ciclo inicio:"+ index);
+                        //Obtenemos la etiqueta de cierre del bucle
+                        String etqFinCiclo = codigoIntermedio.get(index).trim().substring(9);
+                        //System.out.println(etqFinCiclo);
+
+                        //Obtenemos el indice donde se encuentra la etiqueta de cierre
+                        int indexFinal=0;
+
+                        for(String codigo:codigoIntermedio){
+                                if(codigo.trim().contains("wh:")){
+                                    continue;
+                                }else if(codigo.trim().contains(etqFinCiclo)){indexFinal=codigoIntermedio.indexOf(codigo);}
+                        }
+                        //System.out.println("Ciclo final:"+ indexFinal);
+
+                        //Obtener un sub arreglo que contenga solo la parte del arreglo
+
+                        return codigoIntermedio.subList(index,indexFinal);
+          }
+        }
+
+ // ------------------------ GENERACION CODIGO INTERMEDIO -----------------------------
+
+
+ //CLASE PARA ESCRIBIR EL CODIGO INTERMEDIO EN UN ARCHIVO
+class ArchivoCodigoIntermedio {
+
+    public static void escribirArchivo(ArrayList<String>codigoIntermedio){
+        String fileName = "codigo_intermedio.txt";
+        File archivo = new File(fileName);
+        try{
+            PrintWriter salida = new PrintWriter(archivo);
+            for(String e:codigoIntermedio){
+                salida.print(e);
+            }
+            salida.close();
+        }catch(FileNotFoundException ex){
+            System.out.println("No se encontro el archivo");
+        }
+    }
+}
+
+// ------------------------ OPTIMIZACION CODIGO INTERMEDIO -----------------------------
+
+//CLASE PARA GENERAR EL ARCHIVO OPTIMIZADO DE CODIGO INTERMEDIO
+class ArchivoOptimizado{
+    public static void escribirArchivo(ArrayList<String>codigoOptimizado){
+        String fileName = "codigo_optimizado.txt";
+                File archivo = new File(fileName);
+                try{
+                    PrintWriter salida = new PrintWriter(archivo);
+                    for(String e:codigoOptimizado){
+                        salida.print(e);
+                    }
+                    salida.close();
+                }catch(FileNotFoundException ex){
+                    System.out.println("No se encontro el archivo");
+                }
+    }
+}
+class TablaIdentificadores {
+
+    // En este HashMap vamos a ir guardado los identificadores(String) y su tipo (String)
+    //Un HashMap se compone de una llave(token) y un valor(tipo de dato)
+    private static HashMap<String,String> tabla = new HashMap();
+
+    private static ArrayList<Integer> enterosTipos = new ArrayList();
+    private static ArrayList<Integer> flotantesTipos = new ArrayList();
+
+    private static ArrayList<Integer> booleanosTipos = new ArrayList();
+
+    private static ArrayList<Integer> cadenaTipos = new ArrayList();
+
+    //En este metodo vamos agregando los identificadores
+
+    //Modificamos
+    public static void insertarIdentificadores(String token, String tipo){tabla.put(token,tipo);}
+
+    public static void inicializarTipos(){
+        //Guardamos el kind que hace referencia al dato primitivo de entero y el propio kind de entero
+        enterosTipos.add(12);
+        enterosTipos.add(3);
+
+        //Asi se hace con el resto de valores
+        flotantesTipos.add(13);
+        flotantesTipos.add(4);
+
+        booleanosTipos.add(14);
+        booleanosTipos.add(15);
+        booleanosTipos.add(7);
+
+        cadenaTipos.add(10);
+        cadenaTipos.add(5);
+
+    }
+
+    //Imprimir valores de la tabla
+    public static void mostrarTabla(){
+        for(String i:tabla.keySet()){
+            System.out.println("Token:" + i + " tipo:" + tabla.get(i));
+        }
+    }
+
+
+    //Verificamos la existencia del token en nuestra tabla
+    public static boolean checkExistenciaId(String token){
+
+        return tabla.containsKey(token);
+    }
+    //Obtenemos el tipo de dato del token a traves de la tabla identificadores
+    public static String obtenerTipoidentificador(String t){
+        return tabla.get(t);
+    }
+
+
+    private static int obtenerTipoKindIdentificador(String t){
+        String tipoString = obtenerTipoidentificador(t);
+        int kind = 0;
+        String tmp = (tipoString != null)  ? tipoString.toLowerCase() : "nulo";
+        switch (tipoString.toLowerCase()){
+            case "nulo": kind = -1;
+            case "entero": kind = 3;
+            break;
+            case "flotante": kind = 4;
+            break;
+            case "booleano": kind = 7;
+            break;
+            case "cadena": kind = 5;
+            break;
+        }
+        return kind;
+    }
+
+    private static int obtenerkindAsignado(String t){
+        int kind =0;
+        //Utilizar expresiones regulares
+        if(t.matches("\\d+")){
+            //System.out.println("Es un entero");
+            kind = 3;
+        }else if(t.matches("falso") || t.matches("verdadero")){
+            //System.out.println("Es un booleano");
+            kind = 7;
+        }else if(t.matches("\\d+[.]\\d+")){
+            //System.out.println("Es un flotante");
+            kind = 4;
+        }else{
+            //System.out.println("Es una cadena");
+            kind = 5;
+        }
+
+        return kind;
+    }
+
+    //COMPROBACION DE TIPOS
+    //ENTRE VARIABLE Y UN TERMINAL
+    /*
+    * Token identificador: hace referencia a la variable
+    * Token asignado: hace referencia al terminal
+    * */
+    public static boolean verifiacionConToken(String identificador, String asignado){
+        //Obtenemos el tipo de identificador en la tabla
+
+        //System.out.println("kind de asignado:"+ asignado.kind);
+        //System.out.println("Identificador:" + identificador);
+
+
+            //Obtenemos el tipo de nuestro token identificador a partir de la tabla de simbolos
+            String tipo = tabla.get(identificador).toLowerCase();
+            int kind;
+
+            //Evaluamos si asignado no es una variable
+            //En dado caso que lo sea, obtenemos su tipo asociado
+            if(obtenerTipoidentificador(asignado) == null){
+                kind = obtenerkindAsignado(asignado);
+            }else{
+                //Si es un valor primitivo, aplicamos el metodo obtenerkindAsignado
+                kind = obtenerTipoKindIdentificador(asignado);
+            }
+
+
+
+
+            //Si mi tipo del identificador es entero, comprobamos que el token asignado sea igual de tipo entero o relacionado
+            if(tipo.equals("entero") && enterosTipos.contains(kind)){
+                return true;
+                //Si mi tipo del identificador es cadena, comprobamos que el token asignado sea igual de tipo cdena
+            }else if(tipo.equals("cadena") && cadenaTipos.contains(kind)){
+                return true;
+            }else if(tipo.equals("booleano") && booleanosTipos.contains(kind)){
+                return true;
+            }else if(tipo.equals("flotante") && flotantesTipos.contains(kind)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+    }
+}
+class CodigoObjeto{
+    static File f;
+
+    public CodigoObjeto(String nombreArchivo){
+        f = new File(nombreArchivo);
+        CleanCPP();
+        EscribirCod(
+            "#include <stdio.h>\n"+
+            "#include <iostream>\n"+
+            "#include <string>\n"+
+            "using namespace std;\n"+
+            "int main(){\n"
+        );
+
+    }
+
+    public static void generarEnsamblador(){
+
+        try{
+            //Verificamos si el ejecutable existe
+            File arch = new File("programa.exe");
+            if(arch.exists()){arch.delete();}
+
+            //Generamos el ejecutable
+            String comando = "g++ -o programa codigoObjeto.cpp";
+            Runtime.getRuntime().exec(comando);
+
+            //Generamos el codigo en ensamblador
+            comando = "g++ -S -masm=intel codigoObjeto.cpp";
+            Runtime.getRuntime().exec(comando);
+
+            while(!arch.exists()){}
+
+            comando = "cmd /c start " + "programa.exe";
+            ProcessBuilder build = new ProcessBuilder("cmd.exe","/c","/K",comando);
+            Process proceso = build.start();
+
+        }catch(IOException e){
+            System.out.println("El comando no se puede ejecutar");
+        }
+    }
+
+    public static void sentenciaFinal(){
+        CodigoObjeto.EscribirCod("return 0;}\n");
+    }
+
+    public void CleanCPP(){
+        try{
+            FileWriter w = new FileWriter(f , false);
+
+            BufferedWriter bw = new BufferedWriter(w);
+
+            PrintWriter wr = new PrintWriter(bw);
+
+            wr.write("");
+
+            wr.close();
+            bw.close();
+
+        }catch(IOException e){
+            System.out.println("No se puede limpiar");
+        }
+    }
+
+    public static void EscribirCod(String s){
+        try {
+
+            FileWriter w = new FileWriter(f , true);
+
+            BufferedWriter bw = new BufferedWriter(w);
+
+            PrintWriter wr = new PrintWriter(bw);
+            wr.write(s);
+
+            wr.close();
+            bw.close();
+            } catch (java.io.IOException e) {
+                e.printStackTrace();
+                System.out.println("no se pudo escribir");
+            }
+    }
+}
+
+
+
+
+
+PARSER_END(Pseasy)
+
+TOKEN_MGR_DECLS:{
+    static ArrayList<String> tabla = new ArrayList();
+
+    //Variable auxiliar para parte semantica
+    static String valorAsignado=null;
+
+    //PILA DE OPERADORES
+    //En esta pila iremos guardando los operadores para comprobar la jerarquia de operadores
+
+
+   //Mapa de variable y constante
+   // Aqui se guarda la relacion de variable y constante
+   //Con la finalidad de relacionar la propagacion de constantes
+   static HashMap<String,String> constantes = new HashMap();
+
+
+}
+
+// Inicio y fin del programa
+TOKEN : {
+    <INICIO: "Algoritmo">
+    |
+    <FIN: "FinAlgoritmo">
+}
+
+// Tipos de dato
+TOKEN : {
+
+    <ENTERO: "entero">
+    |
+    <FLOTANTE:"flotante">
+    |
+    <CADENA:"cadena">
+    |
+    <BOOLEANO:"booleano">
+}
+
+
+// Constantes/Literales
+TOKEN : {
+    <#LETRA: ["a" - "z"] | ["A" - "Z"]>
+    |
+    <#NUMERO: ["0" - "9"]>
+    |
+    <CADENA_TEXTO: "\"" ( ~["\""] )* "\"">
+    |
+    <NUMERO_ENTERO:("-" | "" | "+")(<NUMERO>)+>
+    |
+    <NUMERO_DECIMAL: ("-" | "" | "+")(<NUMERO>)+"."(<NUMERO>)+>
+    |
+    <BOOLEANO_FALSO: "Falso">
+    |
+    <BOOLEANO_VERDADERO: "Verdadero">
+    |
+    <DELIMITADOR: ";">
+    |
+    <COMA:","> //Coma
+    |
+    <ROMPER_CASO: "fincaso"> //Toj
+}
+
+// Escritura, Lectura y Definición de variables
+TOKEN : {
+    <LEER: "Leer">
+    |
+    <ESCRIBIR: "Escribir">
+    |
+    <DEFINIR: "Definir">
+}
+
+// Operadores
+TOKEN : {
+    <ASIGNACION: "=">
+    |
+    <SUMA: "+">
+    |
+    <RESTA: "-">
+    |
+    <MULTIPLICACION: "*">
+    |
+    <DIVISION: "/">
+    |
+    <LOGICO_AND: "&&">
+    |
+    <LOGICO_OR: "||">
+    |
+    <LOGICO_NOT: "!">
+    |
+    <OPERADOR_IGUAL: "==">
+    |
+    <OPERADOR_DIFERENTE: "!=">
+    |
+    <OPERADOR_MAYOR: ">">
+    |
+    <OPERADOR_MENOR: "<">
+    |
+    <OPERADOR_MAYOR_IGUAL: ">=">
+    |
+    <OPERADOR_MENOR_IGUAL: "<=">
+    |
+    <OPERADOR_DOS_PUNTOS: ":">
+    |
+    <PAREN_ABIERTO: "(">
+    |
+    <PAREN_CERRADO: ")">
+    |
+    <CONCATENACION: "<<">
+}
+//
+// Ciclos
+TOKEN : {
+    <INICIO_CICLO_PARA: "Para">
+    |
+    <CONDICION_CICLO_PARA: "Hasta que">
+    |
+    <INCREMENTO_CICLO_PARA: "incremento">
+    |
+    <DECREMENTO_CICLO_PARA:"decremento">
+    |
+    <FIN_CICLO_PARA: "FinPara">
+    |
+    <INICIO_CICLO_MIENTRAS: "Mientras">
+    |
+    <FIN_CICLO_MIENTRAS: "FinMientras">
+    |
+    <INICIO_CICLO_REPETIR: "Repetir">
+    |
+    <CONDICION_CICLO_REPETIR: "Finaliza cuando">
+}
+
+// Condicionales
+TOKEN : {
+    <INICIO_CONDICIONAL_SI:"Si">
+    |
+    <ENTONCES:"Entonces">
+    |
+    <CONDICIONAL_SINO:"Sino">
+    |
+    <FIN_CONDICIONAL_SI:"FinSi">
+    |
+    <INICIO_CONDICIONAL_SEGUN:"Segun">
+    |
+    <CASO:"Caso">
+    |
+    <CASO_PREDETERMINADO:"En otro caso">
+    |
+    <FIN_SEGUN:"FinSegun">
+    |
+    <HACER : "Hacer">
+}
+
+//Variables
+TOKEN : {
+    <VARIABLE:(<LETRA> | "_")(<NUMERO> | <LETRA> | "_")*>
+    /*
+    * IDENTIFICADORES NO VALIDOS
+    * */
+}
+
+SKIP : {
+    " "
+    | "\t"
+    | "\r\n"
+    | "\n"
+    | <COMENTARIO: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+    //Tokens invalidos
+    |<ID_INVALIDO:(<NUMERO>)+(<LETRA>|<NUMERO>)+>{tabla.add("Lexical error at line:" + input_stream.getBeginLine() + " column:" + input_stream.getBeginColumn() +
+                                                                     " invalid id:" + image);}
+    | <INVALIDO: ~[]>{tabla.add("Lexical error at line:" + input_stream.getBeginLine() + " column:" + input_stream.getBeginColumn() +
+                    "invalid token:" + image);}
+}
+
+// Gramaticas
+
+//CAMBIO: Nuestro programa puede no tener sentencias entre Algoritmo y FinAlgoritmo
+void programa(): { }{
+
+       try{
+          <INICIO>
+          ( sentencias() )*
+          <FIN>{
+          //TablaIdentificadores.mostrarTabla();
+          /*for(String c:constantes.keySet()){
+            System.out.println("Variable:" + c + " dato:" + constantes.get(c));
+          }*/
+       }
+       }catch(ParseException e){
+            Token t;
+            do{
+                t=getNextToken();
+            }while(t.kind != EOF);
+
+
+            tabla.add("Parser Error:" + e.getMessage());
+       }
+
+}
+
+void sentencias():{
+    TablaIdentificadores.inicializarTipos();
+ }{
+
+            sentenciaAsignacion() |
+            sentenciaDeclaracionVariables() |
+            leerDato() |
+            imprimir() |
+            sentenciaSi() |
+            sentenciaSegun() |
+            sentenciaPara() |
+            sentenciaMientras()
+
+
+
+}
+
+void sentenciaAsignacion():{
+    String identificador = null;
+    String asignado = null;
+ }{
+    try{
+
+        <VARIABLE> {
+                        //EXISTENCIA DE IDENTIFICADORES
+                        // Sino existe el id, lo guardamos en nuestra arreglo de errores
+                        //System.out.println("Token:" + token);
+                         if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                               tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                                       token.beginLine + " column:" + token.beginColumn);
+                         }else{
+                            identificador = token.image;
+                            CodigoObjeto.EscribirCod(token.image);
+                         }
+        }
+        asignado=asignacion() { //Se evalua si se esta asignando el tipo correcto al identificador
+
+                        //--- PARTE SEMANTICA: COMPROBACION DE TIPOS
+                        if(valorAsignado != null && identificador !=null){
+                                  //Si asignado e identificador tienen un valor asignado, se comprueban que sean del mismo tipo
+                                if(!TablaIdentificadores.verifiacionConToken(identificador,valorAsignado)){
+
+                                    tabla.add("The token: " + valorAsignado + " doesn't correspond to the " +
+                                            TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
+
+                                // ----- GENERACION CODIGO INTERMEDIO
+                                //Si esta bien semanticamente, lo pasamos a codigo intermedio
+                                }else{
+                                     if(valorAsignado.matches("\\d+")){
+                                        constantes.put(identificador,valorAsignado);
+                                     }
+                                     generarOperacionAsignacion(identificador,asignado);
+                                      valorAsignado = null;
+                                }
+
+                        }
+
+
+        }
+        <DELIMITADOR> {CodigoObjeto.EscribirCod(";\n"); }
+
+    }catch(ParseException e){
+        //System.out.println(e.toString());
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != EOF);
+        tabla.add("Parser error:" + e.getMessage());
+    }
+}
+
+//Probar manejo de errores
+void sentenciaDeclaracionVariables():{}{
+    try{
+        (declaracionVariables() <DELIMITADOR> {CodigoObjeto.EscribirCod(";\n");})
+
+    }catch(ParseException e){
+            //System.out.println(e.toString());
+            Token t;
+            do{
+                t=getNextToken();
+                //VERIFICAR ERROR DE PUNTO Y COMA AL FINAL
+            }while(t.kind != DELIMITADOR && t.kind != EOF);
+            tabla.add("Parser error:" + e.getMessage());
+    }
+}
+
+
+//CAMBIAMOS el tipo de dato retornado a token
+String constantes():{ }{
+    <NUMERO_ENTERO> {CodigoObjeto.EscribirCod(token.image + " "); return token.image;}
+    | <NUMERO_DECIMAL>  {CodigoObjeto.EscribirCod(token.image + " "); return token.image;}
+    | <CADENA_TEXTO> {CodigoObjeto.EscribirCod(token.image + " "); return token.image;}
+    | <BOOLEANO_FALSO> {CodigoObjeto.EscribirCod(token.image + " "); return token.image;}
+    | <BOOLEANO_VERDADERO> {CodigoObjeto.EscribirCod(token.image + " "); return token.image;}
+}
+
+//ASIGNACION CORRECTA DE VALORES
+String asignacion():{String asignado = "";}{
+     //<ASIGNACION> asignado=condicion()
+
+     <ASIGNACION>{CodigoObjeto.EscribirCod("= ");} asignado=tipoOperacion() {
+
+                    return asignado;
+    }
+}
+
+
+
+/*INICIA MODIFICACION DE FUNCIONES BNF*/
+String tipoOperacion(): {String t;}{
+    (t=operacionAritmetica()
+    |t=operacionConcatenacion()
+    |t=asignarBooleano())
+    {
+          return t;
+          }
+}
+
+String operacionAritmetica():{String e1=""; String e2="";}{
+    e1 = nivelSegundoJerarquia() (<SUMA> {CodigoObjeto.EscribirCod("+ ");} e2=nivelSegundoJerarquia() {e1=generarOperacionAritmetica("+",e1,e2);}
+                        |<RESTA> {CodigoObjeto.EscribirCod("- ");}e2=nivelSegundoJerarquia() {e1=generarOperacionAritmetica("-",e1,e2);})*
+                                {return e1;}
+}
+//Funciones para la jerarquia de operadores
+String nivelSegundoJerarquia():{String e1; String e2;}{
+    e1 = terminalesNumeros() (<MULTIPLICACION> {CodigoObjeto.EscribirCod("* ");}e2=terminalesNumeros() {e1=generarOperacionAritmetica("*",e1,e2);}
+                              |<DIVISION>{CodigoObjeto.EscribirCod("/ ");} e2=terminalesNumeros() {e1=generarOperacionAritmetica("/",e1,e2);}
+                              )*
+                              {return e1;}
+}
+String terminalesNumeros():{String t="";}{
+    (<NUMERO_ENTERO> {t=token.image; valorAsignado=token.image; CodigoObjeto.EscribirCod(token.image + " ");}
+    |<NUMERO_DECIMAL> {t=token.image;valorAsignado=token.image;CodigoObjeto.EscribirCod(token.image + " ");}
+    |<VARIABLE>{
+                    //EXISTENCIA DE IDENTIFICADORES
+                 // Sino existe el id, lo guardamos en nuestra arreglo de errores
+                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                        tabla.add("The indentifier: " + token.image + " doesn't exist, at line:" +
+                        token.beginLine + " column:" + token.beginColumn);
+                    }else{
+                        t=token.image;
+                        valorAsignado=token.image;
+                        CodigoObjeto.EscribirCod(token.image + " ");
+                    }
+
+                }
+    |<PAREN_ABIERTO>t=operacionAritmetica()<PAREN_CERRADO>
+    ){return t;}
+}
+
+//Checar este caso
+String operacionConcatenacion():{String ex; }{
+    <CADENA_TEXTO>{ex=token.image; valorAsignado=token.image; CodigoObjeto.EscribirCod(token.image + " ");} (<SUMA> <CADENA_TEXTO>{ex=token.image;})*
+    {return ex;}
+}
+String asignarBooleano():{}{
+    <BOOLEANO_VERDADERO> {valorAsignado=token.image;CodigoObjeto.EscribirCod("true "); ;return token.image;}
+    |<BOOLEANO_FALSO> {valorAsignado=token.image;CodigoObjeto.EscribirCod("false "); ;return token.image;}
+}
+
+
+//TERMINA MODIFICACION DE FUNCIONES BNF
+
+/*
+void operacionParentesis():{}{
+    <PAREN_ABIERTO> operacion() <PAREN_CERRADO>
+}
+
+void operadores():{}{
+    operadoresAritmeticos() | operadoresLogicos() | operadoresRelacionales()
+}*/
+
+//DECLARACION DE VARIABLES:COMPROBACION DE TIPOS
+void declaracionVariables():{
+    String identificador = "";
+    String asignado = "";
+    String tipoDato = "";
+    String aux;
+ }{
+
+
+
+    <DEFINIR>
+    tipoDato=tiposDato()
+    <VARIABLE> {
+                        if(TablaIdentificadores.checkExistenciaId(token.image)){
+
+                            tabla.add("The identifier: " + token.image + " already exist, at line: " + token.beginLine + " column:" + token.endColumn);
+                        }else{
+                            TablaIdentificadores.insertarIdentificadores(token.image,tipoDato);
+                            identificador = token.image;
+                            CodigoObjeto.EscribirCod(token.image + " ");
+                        }
+                    }
+
+    (asignado=asignacion())? { //Se evalua si se esta asignando el tipo correcto al identificador
+                    if(!asignado.equals("")){ //Comprobamos que el token asignado tenga un valor asociado y no sea nulo
+                        //System.out.println("asignado =" + asignado);
+                                  if(!TablaIdentificadores.verifiacionConToken(identificador,valorAsignado)){
+                                      tabla.add("The token: " + valorAsignado + " doesn't correspond to the " +
+                                        TablaIdentificadores.obtenerTipoidentificador(identificador) + " type");
+                                  }else{
+                                      aux = tipoDato + " " + identificador + "=" +asignado + "\n";
+                                      if(valorAsignado.matches("\\d+")){constantes.put(identificador,valorAsignado);}
+                                      agregarCodigoIntermedio(aux);
+                                  }
+                    } else{
+                    aux = tipoDato +" "+ identificador + "\n";
+                    agregarCodigoIntermedio(aux);
+                    }
+    }
+
+}
+String tiposDato():{ }{
+    // Regresamos el patron que coincide con el token
+    <ENTERO> {CodigoObjeto.EscribirCod("int "); return token.image;}
+    | <FLOTANTE> {CodigoObjeto.EscribirCod("double "); return token.image;}
+    | <CADENA> {CodigoObjeto.EscribirCod("string "); return token.image;}
+    | <BOOLEANO> {CodigoObjeto.EscribirCod("boolean "); return token.image;}
+}
+
+void leerDato():{String leer; String variable = "";}{
+    try{
+        <LEER>{CodigoObjeto.EscribirCod("cin >> ");}<VARIABLE>
+        {
+            //Antes de leer el dato y colocarlo en la variable, verificamos que la variable este declarada
+            if(!TablaIdentificadores.checkExistenciaId(token.image)){
+
+                tabla.add("The identifier: " + token.image + " doesn't exists, at line: " + token.beginLine + " column:" + token.endColumn);
+            }else{
+                variable=token.image;
+                CodigoObjeto.EscribirCod(token.image + "");
+            }
+
+
+        } <DELIMITADOR> {agregarCodigoIntermedio("read " + variable );CodigoObjeto.EscribirCod(";\n");}
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != EOF);
+        tabla.add("Parser error:" + e.getMessage());
+    }
+
+}
+
+/*SE MODIFICIARON LA SENTENCIA IMPRIMIR*/
+void imprimir():{String texto; String variable;}{
+
+
+    try{
+    <ESCRIBIR> {CodigoObjeto.EscribirCod("cout << ");} datoImprimir()
+    /*
+        LOOKAHEAD(3)<ESCRIBIR>{CodigoObjeto.EscribirCod("cout << ");}<CADENA_TEXTO>{texto=token.image;CodigoObjeto.EscribirCod(token.image + " << ");} <DELIMITADOR> {agregarCodigoIntermedio("\tEscribir " + texto + "\n");CodigoObjeto.EscribirCod("endl;\n");}
+        |LOOKAHEAD(3)<ESCRIBIR>{CodigoObjeto.EscribirCod("cout << ");}<CADENA_TEXTO>{texto=token.image;CodigoObjeto.EscribirCod(token.image + " << ");}<COMA><VARIABLE>{variable=token.image;CodigoObjeto.EscribirCod(token.image + " << ");}<DELIMITADOR>{agregarCodigoIntermedio("\tEscribir " + texto +"," + variable + "\n" ); CodigoObjeto.EscribirCod("endl;\n");}
+        |<ESCRIBIR>{CodigoObjeto.EscribirCod("cout << ");}<VARIABLE>{variable = token.image;CodigoObjeto.EscribirCod(token.image + " << ");}<DELIMITADOR>{agregarCodigoIntermedio("\tEscribir " + variable + "\n");CodigoObjeto.EscribirCod("endl;\n");}
+    */
+    }catch(ParseException e){
+
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != DELIMITADOR && t.kind != FIN);
+        tabla.add("Parser error:" + e.getMessage());
+    }
+
+    //<ESCRIBIR> ( constantes() | <VARIABLE> ) <DELIMITADOR>
+}
+//Se agreggo un simbolo de concatenacion, el cual es <<
+void datoImprimir():{}{
+
+    constantes() concatenarValores()
+    | <VARIABLE>{CodigoObjeto.EscribirCod(token.image +" ");} concatenarValores()
+
+    //( <CONCATENACION> {CodigoObjeto.EscribirCod(token.image +" ");} datoImprimir())*
+}
+void concatenarValores():{}{
+    <CONCATENACION> {CodigoObjeto.EscribirCod(token.image +" ");} datoImprimir()
+    | <DELIMITADOR> {CodigoObjeto.EscribirCod("<< endl;\n");}
+}
+
+
+
+
+/*  MODIFICAMOS LA FUNCION CONDICION*/
+BloqueCondicion condicion():{BloqueCondicion c1,c2;}{
+
+    c1=condTerm() (<LOGICO_OR> {generarLabel(c1.etqFalso);CodigoObjeto.EscribirCod("|| ");}
+                    c2=condTerm(){
+                            generarLabel(c1.etqVerdad);
+                            generarGoto(c2.etqVerdad);
+                            c1=c2;
+                                } )* {return c1;}
+}
+BloqueCondicion condTerm():{BloqueCondicion c1; BloqueCondicion c2; }{
+    c1=condFact() (<LOGICO_AND> {generarLabel(c1.etqVerdad);CodigoObjeto.EscribirCod("&& ");}
+                                c2=condFact(){
+                            generarLabel(c1.etqFalso);
+                            generarGoto(c2.etqFalso);
+                            c1=c2;
+}                       )* {return c1;}
+}
+BloqueCondicion condFact():{
+ BloqueCondicion c1;
+ boolean negado = false;
+ }{
+    (<LOGICO_NOT>{negado = !negado; CodigoObjeto.EscribirCod(token.image +  " ");})*
+    (c1=condSimple() ){
+        if(negado) interCondicion(c1);
+        return c1;
+    }
+}
+BloqueCondicion condSimple():{String ex1;String operador;String ex2;}{
+    ex1=terminalesBooleanas() operador=operadoresRelacionales() ex2=tipoOperacion() {
+
+                        return generarOperacionRelacional(ex1,ex2,operador);
+                    }
+}
+String operadoresRelacionales():{}{
+    <OPERADOR_IGUAL> {CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    | <OPERADOR_DIFERENTE> {CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    | <OPERADOR_MAYOR> {CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    | <OPERADOR_MAYOR_IGUAL> {CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    | <OPERADOR_MENOR> {CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    | <OPERADOR_MENOR_IGUAL> {CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+}
+
+String terminalesBooleanas():{String t = "";}{
+    (<NUMERO_ENTERO>{CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    |<NUMERO_DECIMAL>{CodigoObjeto.EscribirCod(token.image + " ");return token.image;}
+    |<CADENA_TEXTO> {CodigoObjeto.EscribirCod(token.image + " "); return token.image;}
+    |<VARIABLE>
+    { //Comprobamos si la variable existe
+     if(!TablaIdentificadores.checkExistenciaId(token.image)){
+
+        tabla.add("The identifier: " + token.image + " doesnt exist, at line: " + token.beginLine + " column:" + token.endColumn);
+
+     }else{
+        CodigoObjeto.EscribirCod(token.image + " ");
+        return token.image;
+        }
+    }) {return t;}
+    //|<PAREN_ABIERTO> t=condSimple(){return t;} <PAREN_CERRADO>
+}
+
+
+void sentenciaSi():{BloqueCondicion c; String etqFinSi;}{
+    try{
+        <INICIO_CONDICIONAL_SI>{CodigoObjeto.EscribirCod("if (");} c=condicion(){CodigoObjeto.EscribirCod(" ) ");} <ENTONCES> {CodigoObjeto.EscribirCod("{\n"); generarLabel(c.etqVerdad); }
+        ( sentencias() )+ {
+            etqFinSi = generarEq();
+            generarGoto(etqFinSi);
+            generarLabel(c.etqFalso);
+            CodigoObjeto.EscribirCod("}");
+        }
+            [ <CONDICIONAL_SINO> {CodigoObjeto.EscribirCod(" else {\n");} ( sentencias() )+]
+             <FIN_CONDICIONAL_SI> {
+                CodigoObjeto.EscribirCod(" }\n");
+             generarLabel(etqFinSi);
+             }
+    }catch(ParseException e){
+        Token t;
+        do{
+            t=getNextToken();
+        }while(t.kind != EOF);
+        tabla.add("Parser error:" + e.getMessage());
+    }
+
+}
+
+
+
+void sentenciaSegun():{String ex ="";String finSegun; String finalCaso; String eCaso;}{
+
+    <INICIO_CONDICIONAL_SEGUN> {CodigoObjeto.EscribirCod("switch ");} <VARIABLE> {
+                if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                    tabla.add("The identifier: " + token.image + " doesn`t exist, at line: " +
+                    token.beginLine + " column:" + token.endColumn);
+                        }
+                else {ex=token.image;CodigoObjeto.EscribirCod("("+ token.image + "){\n");}
+                } <HACER> //{finSegun=generarEq();}
+    ( <CASO>{CodigoObjeto.EscribirCod("case ");} eCaso=constantes() <OPERADOR_DOS_PUNTOS>{CodigoObjeto.EscribirCod(":\n");}
+    { finalCaso = generarEq();
+        agregarCodigoIntermedio("\tif " + ex + " != " + eCaso + " goto " + finalCaso + "\n");
+        generarLabel(finalCaso);
+                         }
+    ( sentencias())+ <ROMPER_CASO><DELIMITADOR>{CodigoObjeto.EscribirCod("break;\n");} )+
+    //Añadimos un token para marcar el fin del caso
+
+    ( <CASO_PREDETERMINADO> <OPERADOR_DOS_PUNTOS> {CodigoObjeto.EscribirCod("default:\n");}( sentencias() )+ )?
+    <FIN_SEGUN> {finSegun = generarEq(); generarLabel(finSegun);CodigoObjeto.EscribirCod("}\n");}
+}
+
+//Ciclo for
+void sentenciaPara():{BloqueCondicion c;String inicioPara; String ex1=""; String ex2;String variacion; String numVariacion; String simbolo;}{
+
+
+        <INICIO_CICLO_PARA> {
+                              inicioPara=generarEq();
+                              generarLabel(inicioPara);
+                              CodigoObjeto.EscribirCod("for( ");
+                            }
+        <VARIABLE>{
+                    if(!TablaIdentificadores.checkExistenciaId(token.image)){
+                       tabla.add("The identifier: " + token.image + " doesn`t exist, at line: " +
+                       token.beginLine + " column:" + token.endColumn);
+                           }
+                    else{ex1=token.image; CodigoObjeto.EscribirCod(token.image +" ");}
+                    }<ASIGNACION> {CodigoObjeto.EscribirCod(token.image + " ");} ex2=tipoOperacion() {generarOperacionAsignacion(ex1,ex2); CodigoObjeto.EscribirCod("; ");}
+            <CONDICION_CICLO_PARA> c=condicion() {generarLabel(c.etqVerdad);CodigoObjeto.EscribirCod("; ");}
+            variacion=variacionPara() ( <NUMERO_ENTERO> | <NUMERO_DECIMAL> )
+            {
+                numVariacion=token.image;
+                if(variacion.equals("inc"))
+                {
+                    simbolo = "+ ";
+                }
+                else{
+                    simbolo = "- ";
+                }
+                CodigoObjeto.EscribirCod( ex1 + " = "+ ex1 +" "+ simbolo + numVariacion + "){\n");
+            }
+            ( sentencias() )+ {agregarCodigoIntermedio("\t" + ex1 + " " + variacion + " " + numVariacion);}
+            <FIN_CICLO_PARA>{generarGoto(inicioPara); generarLabel(c.etqFalso);CodigoObjeto.EscribirCod("}\n");}
+
+
+}
+String variacionPara():{}{
+    <INCREMENTO_CICLO_PARA> {return "inc";}
+    |<DECREMENTO_CICLO_PARA> {return "des";}
+}
+
+/*
+//Ciclo do while
+void sentenciaRepetir():{ }{
+
+    <INICIO_CICLO_REPETIR> ( sentencias() )+
+    <CONDICION_CICLO_REPETIR> condicion() <DELIMITADOR>
+}*/
+
+//Ciclo while
+void sentenciaMientras():{BloqueCondicion c;String inicioWhile="";}{
+
+    <INICIO_CICLO_MIENTRAS> {
+                                inicioWhile=generarEq();
+                               generarLabel("wh",inicioWhile);
+                               CodigoObjeto.EscribirCod("while ( ");
+                            }
+    c=condicion() <HACER> {generarLabel(c.etqVerdad); CodigoObjeto.EscribirCod("){\n");}
+    ( sentencias() )+
+    <FIN_CICLO_MIENTRAS> {generarGoto(inicioWhile); generarLabel(c.etqFalso);CodigoObjeto.EscribirCod("}\n");}
+}
+
+
+
+
+/*
+* ELEMENTOS QUE ELIMINE
+* EL TIPO DE DATO CARACTER
+* LA ASIGNACION COMPUESTA
+*
+* */

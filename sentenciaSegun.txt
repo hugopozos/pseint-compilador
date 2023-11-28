@@ -1,11 +1,14 @@
 Algoritmo
 
    definir entero x;
-
+   Escribir "Ingresa un numero:";
+   Leer x;
     Segun x Hacer
         Caso 1:
             Escribir "Hola";
+        FinCaso;
         Caso 2:
             Escribir "Adios";
+        FinCaso;
     FinSegun
 FinAlgoritmo

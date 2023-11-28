@@ -1,0 +1,39 @@
+Algoritmo
+
+definir entero a1 = 5;
+definir entero a2 = 2;
+definir entero a3 = 1;
+
+Si a1 > a2 && a1> a3 entonces
+Escribir "El número mayor es:";
+Si a1 > a2 && a1 < a3 ||  a1 < a2 && a1 > a3 entonces
+Escribir "El número intermedio es:";
+sino
+Escribir "El número menor es:";
+FinSi
+FinSi
+
+
+
+Si a2 > a1 && a2> a3 entonces
+Escribir "El número mayor es:";
+Si a2 > a1 && a2 < a3 ||  a2 < a1 && a2 > a3 entonces
+Escribir "El número intermedio es:";
+sino
+Escribir "El número menor es:";
+FinSi
+FinSi
+
+
+
+Si a3 > a1 && a3> a2 entonces
+Escribir "El número mayor es:";
+Si a3 > a1 && a3 < a2 ||  a3 < a1 && a3 > a2 entonces
+Escribir "El número intermedio es:";
+sino
+Escribir "El número menor es:";
+FinSi
+FinSi
+
+
+FinAlgoritmo

@@ -1,20 +1,9 @@
-entero a=10
-entero b
-tmp1=10+10
-b=tmp1
-entero y
-entero x
-entero z
-tmp2=5+2
-x=tmp2
-tmp3=10*4
-wh:label etq1
-	if y<5 goto etq2
+entero n
+read nwh:label etq1
+	if n>0 goto etq2
 	goto etq3
 label etq2
-	Escribir x
-y=tmp3
-tmp4=1+y
-y=tmp4
+tmp1=n-1
+n=tmp1
 	goto etq1
 label etq3

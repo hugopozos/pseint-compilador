@@ -1,0 +1,10 @@
+Algoritmo
+
+    definir entero n;
+    Escribir "Ingrese numero:";
+    Leer n;
+    Mientras n > 0 hacer
+        escribir n;
+        n = n - 1;
+    FinMientras
+FinAlgoritmo
